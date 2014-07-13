@@ -101,9 +101,9 @@ if (exonic) {
 		'rownames(output$counts) <- paste0(rownames(output$counts), ":", unlist(by.exon))')
 } 
 cmds <- c(cmds, 
-sprintf('write.table(output$counts, file="%s_counts.tsv", sep="\\t", quote=FALSE, row.names=TRUE, col.names=NA)', ifelse(exonic, "exon", "gen")))
+sprintf('write.table(output$counts, file="%sic_counts.tsv", sep="\\t", quote=FALSE, row.names=TRUE, col.names=NA)', ifelse(exonic, "exon", "gen")))
 
-cat("\\begin{Schunk}\n\\begin{Sinput}")
+cat("\\begin{Schunk}\n\\begin{Sinput}\n")
 cat(paste(ifelse(grepl("^\\s", cmds), "+", ">"), cmds), 'head(output$counts)', sep="\n")
 cat("\\end{Sinput}\n\\end{Schunk}")
 @
@@ -140,7 +140,7 @@ Obviously, fragment sizes may be inflated by the inclusion of the intron length 
 	   		"    diags[[basename(bam)]] <- current$diagnostics",
 	   		"}")
 	
-	cat("\\begin{Schunk}\n\\begin{Sinput}")
+	cat("\\begin{Schunk}\n\\begin{Sinput}\n")
 	cat(paste(ifelse(grepl("^\\s", cmds), "+", ">"), cmds), sep="\n")
 	cat("\\end{Sinput}\n\\end{Schunk}")
    	eval(parse(text=cmds))
