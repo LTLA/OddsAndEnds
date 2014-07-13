@@ -75,7 +75,7 @@ minq <- 30
 
 The number of reads (or read pairs) mapped to each exon is counted for each gene in the current genome. 
 <<echo=FALSE,results=tex>>=
-if (get.exons) { 
+if (exonic) { 
 	cat("For exon-level results, different counts for splice variants are not calculated due to the difficulties of isoform deconvolution.\n")
 } else {
 	cat("For gene-level results, exon-level counts are summed together for each gene obtain a single count for that gene.\n")
@@ -84,9 +84,9 @@ if (get.exons) {
 A copy of the count table is saved for downstream use in the differential expression analysis.
 
 <<echo=FALSE,results=tex>>=
-cmds <- c(sprintf('output <- featureCounts(allBam, annot.inbuilt=genome, isPairedEnd=pet, minMQS=minq, useMetaFeatures=%s)', as.character(!get.exons)),
+cmds <- c(sprintf('output <- featureCounts(allBam, annot.inbuilt=genome, isPairedEnd=pet, minMQS=minq, useMetaFeatures=%s)', as.character(!exonic)),
 'colnames(output$counts) <- sub("\\\\.bam$", "", basename(allBam))')
-if (get.exons) {
+if (exonic) {
 # Pulling out exon IDs.
 	cmds <- c(cmds, 
 		'by.gene <- rle(output$annotation$GeneID)',
@@ -101,7 +101,7 @@ if (get.exons) {
 		'rownames(output$counts) <- paste0(rownames(output$counts), ":", unlist(by.exon))')
 } 
 cmds <- c(cmds, 
-sprintf('write.table(output$counts, file="%s_counts.tsv", sep="\\t", quote=FALSE, row.names=TRUE, col.names=NA)', ifelse(get.exons, "exon", "gen")))
+sprintf('write.table(output$counts, file="%s_counts.tsv", sep="\\t", quote=FALSE, row.names=TRUE, col.names=NA)', ifelse(exonic, "exon", "gen")))
 
 cat("\\begin{Schunk}\n\\begin{Sinput}")
 cat(paste(ifelse(grepl("^\\s", cmds), "+", ">"), cmds), 'head(output$counts)', sep="\n")
