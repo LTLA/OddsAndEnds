@@ -30,9 +30,7 @@ if (!exists('pet')){
     stop("Need a boolean specifying if data is PET or not ('pet').");
 }
 if (!exists("exonic")) {
-    get.exons <- FALSE
-} else {
-    get.exons <- TRUE
+	exonic <- FALSE
 }
 @
 
@@ -76,7 +74,7 @@ minq <- 30
 @
 
 The number of reads (or read pairs) mapped to each exon is counted for each gene in the current genome. 
-<<results=tex>>=
+<<echo=FALSE,results=tex>>=
 if (get.exons) { 
 	cat("For exon-level results, different counts for splice variants are not calculated due to the difficulties of isoform deconvolution.\n")
 } else {
@@ -85,68 +83,85 @@ if (get.exons) {
 @
 A copy of the count table is saved for downstream use in the differential expression analysis.
 
-<<results=tex>>=
+<<echo=FALSE,results=tex>>=
 cmds <- c(sprintf('output <- featureCounts(allBam, annot.inbuilt=genome, isPairedEnd=pet, minMQS=minq, useMetaFeatures=%s)', as.character(!get.exons)),
-'colnames(output$counts) <- sub("\\\\.bam$", "", basename(allBam))',
+'colnames(output$counts) <- sub("\\\\.bam$", "", basename(allBam))')
+if (get.exons) {
+# Pulling out exon IDs.
+	cmds <- c(cmds, 
+		'by.gene <- rle(output$annotation$GeneID)',
+		'gene.ends <- cumsum(by.gene$lengths)',
+		'by.exon <- list()',
+		'for (g in 1:length(gene.ends)) {',
+		'    current <- output$annotation[gene.ends[g]-by.gene$lengths[g]:1+1,]',
+		'    if (all(current$Strand=="+")) { by.exon[[g]] <- order(current$Start) }',
+		'    else if (all(current$Strand=="-")) { by.exon[[g]] <- order(current$End, decreasing=TRUE) }',
+		'    else { stop("annotation has multiple strands for a single gene") }',
+		'}',
+		'rownames(output$counts) <- paste0(rownames(output$counts), ":", unlist(by.exon))')
+} 
+cmds <- c(cmds, 
 sprintf('write.table(output$counts, file="%s_counts.tsv", sep="\\t", quote=FALSE, row.names=TRUE, col.names=NA)', ifelse(get.exons, "exon", "gen")))
-cat(paste(">", cmds), sep="\n")
+
+cat("\\begin{Schunk}\n\\begin{Sinput}")
+cat(paste(ifelse(grepl("^\\s", cmds), "+", ">"), cmds), 'head(output$counts)', sep="\n")
+cat("\\end{Sinput}\n\\end{Schunk}")
 @
 <<results=hide>>=
 eval(parse(text=cmds))
 @
-
-The proportion of reads mapped to genic regions is also calculated for all files. This can
-be taken as a measure of data quality as transcriptome sequencing should mostly yield
-reads within annotated genic regions. A low proportion of gene-mapped reads may be indicative
-of genomic contamination. 
-<<echo=FALSE,results=tex>>=
-if (pet) {
-  cat("For PET data, we double the number of counted reads as each fragment
-corresponds to a read pair. Note that \\texttt{featureCounts} will count a pair
-if either of the reads in the pair are above the MAPQ threshold. This means that
-the \\texttt{Genic} count may be slightly higher than the \\texttt{filtered} count.\n")
-}
+<<echo=FALSE>>=
+head(output$counts)
 @
+
+We can have a look at some read assignment diagnostics.
+The proportion of reads mapped to genic regions is also calculated for all files. 
+This can be taken as a measure of data quality as transcriptome sequencing should mostly yield reads within annotated genic regions. 
+A low proportion of gene-mapped reads may be indicative of genomic contamination. 
 
 <<>>=
-require(Rsamtools)
-mapped2gene <- colSums(output) * ifelse(pet, 2, 1)
-total <- sapply(allBam, FUN=function(x) { countBam(x)$records })
-mapped <- sapply(allBam, FUN=function(x) { countBam(x, isUnmapped=FALSE)$records })
-filtered <- sapply(allBam, FUN=function(x) { system(sprintf("samtools view -c -F 4 -q %i %s", minq, x), intern=TRUE) })
-genic <- data.frame(Total=total, Mapped=mapped, Filtered=filtered, Genic=mapped2gene)
-rownames(genic) <- sub("\\.bam$", "", basename(allBam))
-genic
+colnames(output$stat)[-1] <- basename(allBam)
+output$stat
+output$stat[1,-1]/colSums(output$stat[,-1])
 @
 
-<<results=hide,echo=FALSE>>=
+<<echo=FALSE,results=tex>>=
 if (pet) {
-	cmds <- c('fun<-function(...) { colSums(featureCounts(allBam,' ,
-			'    annot.inbuilt=genome, isPairedEnd=pet, minMQS=minq, ...)$counts) }',
-		    'used <- colSums(output)',
-  		  	'pet.genic <- data.frame(unmapped=1-fun(requireBothEndsMapped=TRUE)/used,',
-			'	chimeric=1-fun(countChimericFragments=FALSE)/used,',
-			'	overlength=1-fun(checkFragLength=TRUE, maxFragLength=5000)/used)',
-			'rownames(pet.genic)<-rownames(genic)',
-			'print(pet.genic)')
-	eval(parse(text=cmds))
+	cat("
+For PET data, we perform additional quality control using the \\texttt{getPETSizes} function in the \\textsf{csaw} package.
+This will examine the distribution of fragment sizes as well as other aspects of counting, e.g., inter-chromosomal read pairs, unmapped read pairs.
+Obviously, fragment sizes may be inflated by the inclusion of the intron length for read pairs spanning exon boundaries.
+\n")
+   	cmds <- c("require(csaw)",
+	    	"sizes <- diags <- list()",
+      	 	"for (bam in allBam) {",
+	   		"    current <- getPETSizes(bam, minq=minq)", 
+	   		"    sizes[[basename(bam)]] <- summary(current$sizes)",
+	   		"    diags[[basename(bam)]] <- current$diagnostics",
+	   		"}")
+	
+	cat("\\begin{Schunk}\n\\begin{Sinput}")
+	cat(paste(ifelse(grepl("^\\s", cmds), "+", ">"), cmds), sep="\n")
+	cat("\\end{Sinput}\n\\end{Schunk}")
+   	eval(parse(text=cmds))
 }
 @
 
-<<results=tex,echo=FALSE>>= 
-if (pet) {
-	cat("If we're talking about PET data, we'll check out what happens when we turn up the stringency. In particular,
-we examine the number of pairs with only one read mapped; the number of pairs which are chimeric (i.e. 
-on differenc chromosomes); and the number of pairs which are very far apart on the linear genome. The last is
-a bit arbitrary as it doesn't account for huge introns. If the other numbers are unusually high, 
- there is probably something wrong with the paired-end sequencing or analysis.
+<<echo=FALSE,results=tex>>=
+if (pet){ 
+	cat("
+Users should be aware that the PET diagnostics here won't necessarily correspond exactly to the reads that are uncounted in \texttt{featureCounts}.
+In fact, \texttt{featureCounts} is very permissive when it comes to counting read pairs that are rather silly (e.g., interchromosomals are allowed).
+The truest way to obtain diagnostics would be to run \texttt{featureCounts} with more stringent settings, but this tends to be quite laborious.
 ")
-	cat("\\begin{Schunk}", "\\begin{Sinput}",
-		paste(paste(ifelse(grepl("^[^a-zA-Z]", cmds), "+", ">"), cmds), collapse="\n"),
-		"\\end{Sinput}", sep="\n");
-	cat("\\begin{Soutput}", sep="\n")
-	print(pet.genic)
-	cat("\\end{Soutput}", "\\end{Schunk}", sep="\n")
+	for (x in c("sizes", "diags")) { 
+		cat(c(	"\\begin{Schunk}\n\\begin{Sinput}",
+			 	sprintf("> do.call(rbind, %s)", x),
+				"\\end{Sinput}",
+				"\\begin{Soutput}"), sep="\n")
+		print(do.call(rbind, get(x)))
+		cat("\\end{Soutput}\n\\end{Schunk}\n")
+	}
 }
 @
 
