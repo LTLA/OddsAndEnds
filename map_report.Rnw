@@ -1,0 +1,192 @@
+\documentclass{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage{overpic}
+
+\usepackage{Sweave}
+\SweaveOpts{keep.source=TRUE,prefix.string=qual/plot-mapper}
+\DefineVerbatimEnvironment{Sinput}{Verbatim}{fontshape=sl,fontsize=\scriptsize}
+\DefineVerbatimEnvironment{Soutput}{Verbatim}{fontsize=\scriptsize}
+\DefineVerbatimEnvironment{Scode}{Verbatim}{fontsize=\scriptsize}
+\setkeys{Gin}{width=0.49\textwidth}
+
+<<echo=FALSE,results=tex>>=
+# Checking if we need to print a title.
+if (!is.character(title)) { title <- "Mapping statistics after \\texttt{subread} alignment" }	
+cat(paste0("\\title{", title, "}"))
+@
+
+\author{Aaron Lun}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+This report collates the mapping statistics for the processing pipeline. This
+allows convenient viewing of the mapping results for an entire dataset. Note
+that the pipeline is not mediated by Sweave due to the need for easy rebooting
+when it (inevitably) fails on the larger datasets. We can examine the current
+dataset and mapping parameters by loading up the configuration file.
+
+<<>>=
+param <- read.table("run_me.sh", fill=TRUE, 
+  sep="\t", stringsAsFactors=FALSE)[,1]
+keep <- grep("=", param)
+param <- param[keep]
+useful <- sub("=.*", "", param)
+@
+
+First, we can have a look at the files which were used. We have to take a
+little jaunt into the operating system to do this as the pipeline (and
+corresponding parameters) is written in Bash.  Note that multiple files
+may be present for each library e.g. multiple lanes, technical sequencing
+replicates. 
+
+<<>>=
+current <- which(useful == "files")
+cmd <- paste0(param[current], "; echo ${", useful[current], "[@]}")
+unlist(strsplit(system(cmd, intern=TRUE), " "))
+@
+
+We can then have a look at the encoding for the Phred quality scores. Each
+score represents the probability of an incorrect call for the corresponding
+base in the read. To use this information properly, the pipeline needs to know
+whether the scores are encoded as Phred+33 or +64.
+
+<<>>=
+current <- which(useful == "phred")
+cmd <- paste0(param[current], "; echo $", useful[current])
+as.integer(system(cmd, intern=TRUE))
+@
+
+The alignment itself occurs to a reference genome, processed into an appropriate
+\texttt{subread} index for rapid access. This obviously needs to be specified. Poor
+mapping qualities for individual reads (or the entire dataset) indicates alignment
+to the incorrect genome (e.g., contamination).
+
+<<>>=
+current <- which(useful == "genome")
+cmd <- paste0(param[current], "; echo $", useful[current])
+system(cmd, intern=TRUE)
+@
+
+We also need to know whether the data was paired-end. This will affect the nature
+of the alignment. Moreover, we need to know whether the files have been resorted
+by the read name or position. The former is useful in some cases for paired-end 
+data as both reads in the pair can be accessed at once. Otherwise, the latter
+is more useful as it provides better context to each read. For some types of data
+(e.g. Hi-C), all libraries must be paired-end and sorted by name so this check is moot.
+
+<<>>=
+current <- which(useful == "pet")
+if (length(current)) { 
+   cmd <- paste0(param[current], "; echo $", useful[current])
+   system(cmd, intern=TRUE)
+}
+current <- which(useful == "sortbyname")
+if (length(current)) { 
+   cmd <- paste0(param[current], "; echo $", useful[current])
+   system(cmd, intern=TRUE)
+}
+@
+
+\section{Base-calling quality}
+We examine the base-calling quality scores for the reads in each library using
+\texttt{FastQC}. Boxplots are plotted describing the base quality at each position
+across all reads. Ideally, high quality scores should be observed across the
+read (though abnormally low scores may be due to the use of a different
+encoding). Read quality is typically worse at  the beginning and end of
+each read, though we won't bother to trim as we're only really interested in
+the counts (and some low-quality sequence is better than no sequence at all).
+
+<<results=tex,keep.source=TRUE,echo=FALSE>>=
+all.q <- NULL
+pic.files <- list.files("pics")
+for (fname in pic.files) {
+   	all.q <- append(all.q, file.path("pics", fname, "Images", "per_base_quality.png"))	
+}
+format <- paste0("\\begin{minipage}{0.49\\textwidth}
+\\includegraphics[width=\\textwidth]{", all.q, "}
+\\vspace{-0.3in}
+\\begin{Schunk}
+\\begin{Soutput}
+", pic.files, "
+\\end{Soutput}
+\\end{Schunk}
+\\end{minipage}")
+cat(paste(format, c("\n", "\n\n"), sep=""))
+@
+
+\section{Base composition bias}
+We check whether there are any differences in base composition throughout the length of the read. GC content 
+biases are often introduced by the PCR amplification step in library construction. Consistently large differences 
+in base composition indicates suboptimal chemistry during library preparation or bridge/emulsion PCR. A plot
+which looks like an electropherogram may indicate that adaptors have not been trimmed from the read.
+
+<<results=tex,keep.source=TRUE,echo=FALSE>>=
+all.q <- NULL
+pic.files <- list.files("pics")
+for (fname in pic.files) {
+ 	all.q <- append(all.q, file.path("pics", fname, "Images", "per_base_sequence_content.png"))	
+}
+format <- paste0("\\begin{minipage}{0.49\\textwidth}
+\\includegraphics[width=\\textwidth]{", all.q, "}
+\\vspace{-0.3in}
+\\begin{Schunk}
+\\begin{Soutput}
+", pic.files, "
+\\end{Soutput}
+\\end{Schunk}
+\\end{minipage}")
+cat(paste(format, c("\n", "\n\n"), sep=""))
+@
+
+\section{Alignment and dedupping statistics}
+We collect mapping statistics for each file in the BAM directory. In particular, we 
+look at the total number of reads and the number of mapped reads. For
+simplicity, we won't process PET files differently though additional statistics
+are available (e.g.  concordance of reads in a pair with respect to orientation
+and position). We also report the number of (potential) PCR duplicate
+reads marked by Picard's \texttt{MarkDuplicates} tool. This allows removal
+during downstream analyses to avoid inflation while retaining all information
+from the library for other uses. 
+
+<<>>=
+library(Rsamtools)
+allBam <- list.files("bam", full=TRUE, pattern=".bam$")
+total <- NULL
+mapped <- NULL
+postdedup <- NULL
+for (outbam in allBam) {
+    total<-append(total, countBam(outbam, 
+		param=ScanBamParam(flag=scanBamFlag(isNotPrimaryRead=FALSE)))$records)
+    mapped<-append(mapped, countBam(outbam, 
+		param=ScanBamParam(flag=scanBamFlag(isUnmapped=FALSE, 
+			isNotPrimaryRead=FALSE)))$records)
+    postdedup<-append(postdedup, countBam(outbam, 
+		param=ScanBamParam(flag=scanBamFlag(isUnmapped=FALSE,
+			isDuplicate=FALSE,isNotPrimaryRead=FALSE)))$records)
+}
+@
+
+We examine the proportion of mapped reads for each library. High quality
+datasets should have a high proportion of mapped reads.  Poor mapping
+percentages may be due to contamination from other organisms, low base-calling
+qualities, incomplete genome assemblies or improper chimerism from off-site
+cleavage or incomplete digestion. Repetitive sequences may also cause low
+mapping percentages.  We can also monitor the number of reads removed by
+dedupping. This tends to be close to the true PCR duplication rate as the
+chance of randomly obtaining exact duplicates across the interaction space is
+low.
+
+<<>>=
+output<-cbind(total, mapped, mapped/total*100, 
+  postdedup, postdedup/mapped*100);
+colnames(output)<-c("Total", "Mapped", "Prop. mapped (%)", 
+  "Dedupped", "Prop. dedupped (%)");
+rownames(output)<-basename(allBam);
+options(width=200)
+output
+@
+
+\end{document}

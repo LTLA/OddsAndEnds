@@ -1,0 +1,161 @@
+\documentclass{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage{Sweave}
+\usepackage{float}
+\usepackage{listings}
+\SweaveOpts{keep.source=TRUE}
+\DefineVerbatimEnvironment{Sinput}{Verbatim}{fontshape=sl,fontsize=\scriptsize}
+\DefineVerbatimEnvironment{Soutput}{Verbatim}{fontsize=\scriptsize}
+\DefineVerbatimEnvironment{Scode}{Verbatim}{fontsize=\scriptsize}
+
+<<echo=FALSE,results=tex>>=
+# Checking if we need to print a title.
+if (!is.character(title)) { title <- "Counting exonic reads with \\texttt{featureCounts}" }
+cat(paste0("\\title{", title, "}"))
+@
+
+\author{Aaron Lun}
+
+\begin{document}
+
+<<echo=FALSE,results=hide>>=
+# Checking inputs
+if (! exists('allBam')) {
+    stop("Need a vector containing names of BAM files.");
+}
+if (!exists('genome')) {
+    stop("Need to specify genome ('hg19' or 'mm10')")
+} else if (genome=="mm9") { stop("say what?") }
+if (!exists('pet')){
+    stop("Need a boolean specifying if data is PET or not ('pet').");
+}
+if (!exists("exonic")) {
+    get.exons <- FALSE
+} else {
+    get.exons <- TRUE
+}
+@
+
+\maketitle
+ 
+\section{Introduction}
+We first need to specify the BAM files we are working from and the genomic annotation which is to be used. The idea is to call the 
+\texttt{featureCounts} function in the \texttt{Rsubread} package to count the number of reads for each gene in each library. Using 
+the same package for alignment and read counting avoids problems with synchronisation between the genome index and annotation.
+
+<<>>=
+require(Rsubread)
+print(allBam);
+print(genome)
+@
+
+RNA-PET data poses some additional challenges due to  correlations between paired reads. 
+<<results=tex,echo=FALSE>>=
+if (pet){ 
+	cat("Each pair should only be counted once as it 
+represents a single sequenced cDNA fragment. Counting them twice as separate reads overstates the evidence, reduces the effectiveness 
+of filtering and messes with the mean-variance relationship of the NB model by reducing the relative contribution of the Poisson term.")
+} else {
+	cat("Fortunately, this isn't a problem here as we're dealing with single-end data.")
+}
+cat("\n")
+@
+
+<<>>=
+print(pet)
+@
+
+We also specify the minimum mapping quality which is allowable for a read (pair) to be counted.
+Low MAPQ scores are indicative of reads which are poorly mapped or not uniquely mapped. Their
+removal improves the reliability of the alignment and of the results themselves. This threshold
+is set at 30 which assumes that 0.1\% of reads are incorrectly mapped due to ambiguity 
+(or other reasons). Complete depletion of non-unique reads may be too conservative.
+
+<<>>=
+minq <- 30
+@
+
+Finally, we decide whether we want to report the results in terms of exons or in terms of genes.
+Gene-level counts are useful for simple DE analyses whereas exon-level counts are useful for 
+looking at some differential isoform usage.
+
+<<>>=
+get.exons
+@
+
+The number of reads (or read pairs) mapped to each exon is counted. If results are
+desired in terms of genes, exon-level counts are aggregated to obtain a count for each gene. 
+For exonic results, different counts for  splice variants are not calculated due to the difficulties
+of isoform deconvolution. 
+A copy of the count table is saved for downstream use in the differential expression analysis.
+
+<<results=hide>>=
+output <- featureCounts(allBam, annot.inbuilt=genome, isPairedEnd=pet, 
+    minMQS=minq, useMetaFeatures=!get.exons)$counts
+colnames(output) <- sub("\\.bam$", "", basename(allBam))
+write.table(output, file="genic_counts.tsv", sep="\t", quote=FALSE, row.names=TRUE, col.names=NA)
+@
+
+The proportion of reads mapped to genic regions is also calculated for all files. This can
+be taken as a measure of data quality as transcriptome sequencing should mostly yield
+reads within annotated genic regions. A low proportion of gene-mapped reads may be indicative
+of genomic contamination. 
+<<echo=FALSE,results=tex>>=
+if (pet) {
+  cat("For PET data, we double the number of counted reads as each fragment
+corresponds to a read pair. Note that \\texttt{featureCounts} will count a pair
+if either of the reads in the pair are above the MAPQ threshold. This means that
+the \\texttt{Genic} count may be slightly higher than the \\texttt{filtered} count.\n")
+}
+@
+
+<<>>=
+require(Rsamtools)
+mapped2gene <- colSums(output) * ifelse(pet, 2, 1)
+total <- sapply(allBam, FUN=function(x) { countBam(x)$records })
+mapped <- sapply(allBam, FUN=function(x) { countBam(x, isUnmapped=FALSE)$records })
+filtered <- sapply(allBam, FUN=function(x) { system(sprintf("samtools view -c -F 4 -q %i %s", minq, x), intern=TRUE) })
+genic <- data.frame(Total=total, Mapped=mapped, Filtered=filtered, Genic=mapped2gene)
+rownames(genic) <- sub("\\.bam$", "", basename(allBam))
+genic
+@
+
+<<results=hide,echo=FALSE>>=
+if (pet) {
+	cmds <- c('fun<-function(...) { colSums(featureCounts(allBam,',
+			'    annot.inbuilt=genome, isPairedEnd=pet, minMQS=minq, ...)$counts) }',
+		    'used <- colSums(output)',
+  		  	'pet.genic <- data.frame(unmapped=1-fun(requireBothEndsMapped=TRUE)/used,',
+			'	chimeric=1-fun(countChimericFragments=FALSE)/used,',
+			'	overlength=1-fun(checkFragLength=TRUE, maxFragLength=5000)/used)',
+			'rownames(pet.genic)<-rownames(genic)',
+			'print(pet.genic)')
+	eval(parse(text=cmds))
+}
+@
+
+<<results=tex,echo=FALSE>>= 
+if (pet) {
+	cat("If we're talking about PET data, we'll check out what happens when we turn up the stringency. In particular,
+we examine the number of pairs with only one read mapped; the number of pairs which are chimeric (i.e. 
+on differenc chromosomes); and the number of pairs which are very far apart on the linear genome. The last is
+a bit arbitrary as it doesn't account for huge introns. If the other numbers are unusually high, 
+ there is probably something wrong with the paired-end sequencing or analysis.
+")
+	cat("\\begin{Schunk}", "\\begin{Sinput}",
+		paste(paste(ifelse(grepl("^[^a-zA-Z]", cmds), "+", ">"), cmds), collapse="\n"),
+		"\\end{Sinput}", sep="\n");
+	cat("\\begin{Soutput}", sep="\n")
+	print(pet.genic)
+	cat("\\end{Soutput}", "\\end{Schunk}", sep="\n")
+}
+@
+
+\section{Session Information}
+
+<<>>=
+options(width=100)
+sessionInfo()
+@
+
+\end{document}
