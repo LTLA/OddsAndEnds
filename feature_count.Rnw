@@ -75,29 +75,24 @@ is set at 30 which assumes that 0.1\% of reads are incorrectly mapped due to amb
 minq <- 30
 @
 
-Finally, we decide whether we want to report the results in terms of exons or in terms of genes.
-Gene-level counts are useful for simple DE analyses whereas exon-level counts are useful for 
-looking at some differential isoform usage.
-
-<<>>=
-get.exons
-@
-
-The number of reads (or read pairs) mapped to each exon is counted for the current genome. 
+The number of reads (or read pairs) mapped to each exon is counted for each gene in the current genome. 
 <<results=tex>>=
 if (get.exons) { 
-	cat("For exonic results, different counts for splice variants are not calculated due to the difficulties of isoform deconvolution.\n")
+	cat("For exon-level results, different counts for splice variants are not calculated due to the difficulties of isoform deconvolution.\n")
 } else {
 	cat("For gene-level results, exon-level counts are summed together for each gene obtain a single count for that gene.\n")
 }
 @
 A copy of the count table is saved for downstream use in the differential expression analysis.
 
+<<results=tex>>=
+cmds <- c(sprintf('output <- featureCounts(allBam, annot.inbuilt=genome, isPairedEnd=pet, minMQS=minq, useMetaFeatures=%s)', as.character(!get.exons)),
+'colnames(output$counts) <- sub("\\.bam$", "", basename(allBam))',
+sprintf('write.table(output$counts, file="%s_counts.tsv", sep="\t", quote=FALSE, row.names=TRUE, col.names=NA)', ifelse(get.exons, "exon", "gen")))
+cat(paste(">", cmds), sep="\n")
+@
 <<results=hide>>=
-output <- featureCounts(allBam, annot.inbuilt=genome, isPairedEnd=pet, 
-    minMQS=minq, useMetaFeatures=!get.exons)$counts
-colnames(output) <- sub("\\.bam$", "", basename(allBam))
-write.table(output, file="genic_counts.tsv", sep="\t", quote=FALSE, row.names=TRUE, col.names=NA)
+eval(cmds)
 @
 
 The proportion of reads mapped to genic regions is also calculated for all files. This can
@@ -126,7 +121,7 @@ genic
 
 <<results=hide,echo=FALSE>>=
 if (pet) {
-	cmds <- c('fun<-function(...) { colSums(featureCounts(allBam,',
+	cmds <- c('fun<-function(...) { colSums(featureCounts(allBam,' ,
 			'    annot.inbuilt=genome, isPairedEnd=pet, minMQS=minq, ...)$counts) }',
 		    'used <- colSums(output)',
   		  	'pet.genic <- data.frame(unmapped=1-fun(requireBothEndsMapped=TRUE)/used,',
