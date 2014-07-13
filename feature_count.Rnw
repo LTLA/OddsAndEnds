@@ -87,12 +87,12 @@ A copy of the count table is saved for downstream use in the differential expres
 
 <<results=tex>>=
 cmds <- c(sprintf('output <- featureCounts(allBam, annot.inbuilt=genome, isPairedEnd=pet, minMQS=minq, useMetaFeatures=%s)', as.character(!get.exons)),
-'colnames(output$counts) <- sub("\\.bam$", "", basename(allBam))',
-sprintf('write.table(output$counts, file="%s_counts.tsv", sep="\t", quote=FALSE, row.names=TRUE, col.names=NA)', ifelse(get.exons, "exon", "gen")))
+'colnames(output$counts) <- sub("\\\\.bam$", "", basename(allBam))',
+sprintf('write.table(output$counts, file="%s_counts.tsv", sep="\\t", quote=FALSE, row.names=TRUE, col.names=NA)', ifelse(get.exons, "exon", "gen")))
 cat(paste(">", cmds), sep="\n")
 @
 <<results=hide>>=
-eval(cmds)
+eval(parse(text=cmds))
 @
 
 The proportion of reads mapped to genic regions is also calculated for all files. This can
