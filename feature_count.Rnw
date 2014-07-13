@@ -83,10 +83,14 @@ looking at some differential isoform usage.
 get.exons
 @
 
-The number of reads (or read pairs) mapped to each exon is counted. If results are
-desired in terms of genes, exon-level counts are aggregated to obtain a count for each gene. 
-For exonic results, different counts for  splice variants are not calculated due to the difficulties
-of isoform deconvolution. 
+The number of reads (or read pairs) mapped to each exon is counted for the current genome. 
+<<results=tex>>=
+if (get.exons) { 
+	cat("For exonic results, different counts for splice variants are not calculated due to the difficulties of isoform deconvolution.\n")
+} else {
+	cat("For gene-level results, exon-level counts are summed together for each gene obtain a single count for that gene.\n")
+}
+@
 A copy of the count table is saved for downstream use in the differential expression analysis.
 
 <<results=hide>>=
