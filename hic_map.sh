@@ -38,7 +38,7 @@ fi
 counterfoil=my_hicMapper.py
 alchemist=$temp/$counterfoil
 if [ ! -e $alchemist ]; then
-	cp ~/hiC/simtest/methods/presplit_map.py $alchemist   
+	cp  `dirname "${BASH_SOURCE[0]}"`/presplit_map.py $alchemist   
 fi
 if [ ! -e $alchemist ]; then
 	echo "Extraction of Hi-C mapping script failed."
