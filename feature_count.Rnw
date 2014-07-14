@@ -48,11 +48,10 @@ print(genome)
 @
 
 RNA-PET data poses some additional challenges due to  correlations between paired reads. 
-<<results=tex,echo=FALSE>>=
+<<results=tex,echo=FALSE,strip.white=false>>=
 if (pet){ 
-	cat("Each pair should only be counted once as it 
-represents a single sequenced cDNA fragment. Counting them twice as separate reads overstates the evidence, reduces the effectiveness 
-of filtering and messes with the mean-variance relationship of the NB model by reducing the relative contribution of the Poisson term.")
+	cat("Each pair should only be counted once as it represents a single sequenced cDNA fragment. 
+Counting them twice as separate reads overstates the evidence, reduces the effectiveness of filtering and messes with the mean-variance relationship of the NB model by reducing the relative contribution of the Poisson term.")
 } else {
 	cat("Fortunately, this isn't a problem here as we're dealing with single-end data.")
 }
@@ -74,7 +73,7 @@ minq <- 30
 @
 
 The number of reads (or read pairs) mapped to each exon is counted for each gene in the current genome. 
-<<echo=FALSE,results=tex>>=
+<<echo=FALSE,results=tex,strip.white=false>>=
 if (exonic) { 
 	cat("For exon-level results, different counts for splice variants are not calculated due to the difficulties of isoform deconvolution.\n")
 } else {
@@ -83,7 +82,7 @@ if (exonic) {
 @
 A copy of the count table is saved for downstream use in the differential expression analysis.
 
-<<echo=FALSE,results=tex>>=
+<<echo=FALSE,results=tex,strip.white=false>>=
 cmds <- c(sprintf('output <- featureCounts(allBam, annot.inbuilt=genome, isPairedEnd=pet, minMQS=minq, useMetaFeatures=%s)', as.character(!exonic)),
 'colnames(output$counts) <- sub("\\\\.bam$", "", basename(allBam))')
 if (exonic) {
@@ -125,7 +124,7 @@ output$stat
 output$stat[1,-1]/colSums(output$stat[,-1])
 @
 
-<<echo=FALSE,results=tex>>=
+<<echo=FALSE,results=tex,strip.white=false>>=
 if (pet) {
 	cat("
 For PET data, we perform additional quality control using the \\texttt{getPETSizes} function in the \\textsf{csaw} package.
@@ -147,7 +146,7 @@ Obviously, fragment sizes may be inflated by the inclusion of the intron length 
 }
 @
 
-<<echo=FALSE,results=tex>>=
+<<echo=FALSE,results=tex,strip.white=false>>=
 if (pet){ 
 	cat("
 Users should be aware that the PET diagnostics here won't necessarily correspond exactly to the reads that are uncounted in \texttt{featureCounts}.
