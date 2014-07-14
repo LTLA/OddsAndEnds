@@ -67,19 +67,47 @@ for sra in ${files[@]}; do
 	# Decompressing.
 	curjob=$sra":split"
 	if [ `check_done $curjob $log` -eq 1 ]; then
-	   	fastq-dump -O $temp --split-files $sra 
-        echo $curjob >> $log
+		compressfind='\.(fastq|fq)\.gz$'
+		if [[ $curfile =~ \.sra$ ]]; then
+	   		fastq-dump -O $temp --split-files $sra 
+		elif [[ $curfile =~ ${compressfind} ]]; then
+			if [[ $curfile =~ 1${compressfind} ]]; then
+				matefile=`echo $curfile | sed -r "s/1(${compressfind})/2\1/"`
+				useme=1
+			elif [[ $curfile =~ 2${compressfind} ]]
+				matefile=`echo $curfile | sed -r "s/2(${compressfind})/1\1/"`
+				useme=0
+			fi
+			# We check that they match up, but we only process when curfile=1.
+			if [ ! -e $matefile ]; then
+				echo "Mate file for paired-end data not found"
+				exit 1
+			fi
+			if [[ useme	-eq 0 ]]; then
+				continue
+			fi
+			zcat $curfile > $temp/`basename $curfile | sed "s/\.gz$//"`
+			zcat $matefile > $temp/`basename $matefile | sed "s/\.gz$//"`
+        fi
+
+		# FastQC doesn't like the FQ extension, so we will change the name to avoid it.
+		for fn in `ls $temp | grep "\.fq$"`
+		do 
+			newloc=`echo $fn | sed "s/\.fq$/.fastq/"`
+			mv -i $temp/$fn $temp/$newloc
+		done
+		echo $curjob >> $log
 	fi
 
 	# Checking the files. This needs to be done if the file needs *any* processing.
-	fastq1=`find $temp | egrep "_1\.(fastq|fq)$"`
-	fastq2=`find $temp | egrep "_2\.(fastq|fq)$"`
+	fastq1=`find $temp | egrep "1\.fastq$"`
+	fastq2=`find $temp | egrep "2\.fastq$"`
 	if [[ $fastq1 == "" ]] || [[ $fastq2 == "" ]]; then
 		echo "Paired FastQ files not found"
 		exit 1
 	fi
-	prefix1=`echo $fastq1 | sed -r "s/_1\.(fastq|fq)$//"`
-	prefix2=`echo $fastq2 | sed -r "s/_2\.(fastq|fq)$//"`
+	prefix1=`echo $fastq1 | sed -r "s/1\.fastq$//"`
+	prefix2=`echo $fastq2 | sed -r "s/2\.fastq$//"`
 	if [[ $prefix1 != $prefix2 ]]; then
 		echo "Prefixes do not match up for the two FastQ files"
 		exit 1
