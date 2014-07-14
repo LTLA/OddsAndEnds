@@ -2,11 +2,11 @@ set -u
 set -e
 
 # This Bash script is designed to provide support for the Hi-C mapping pipeline
-# i.e. to go from *.sra files to *.bam files.  It does so in a manner that is
-# robust to crashes i.e. can be reloaded at each command if necessary. I've refrained
-# from putting in an e.g. Python-mediated pipeline as I'd have to learn all
-# the coding conventions, and I don't want to do that until I know which one to
-# use (or, have one recommended to me).
+# i.e. to go from *.sra (or FastQ) files to *.bam files.  It does so in a
+# manner that is robust to crashes i.e. can be reloaded at each command if
+# necessary. I've refrained from putting in an e.g. Python-mediated pipeline as
+# I'd have to learn all the coding conventions, and I don't want to do that
+# until I know which one to use (or, have one recommended to me).
 
 ###############################################################################
 # Making a working space, as well as space to store the finished products
@@ -55,8 +55,9 @@ source `dirname "${BASH_SOURCE[0]}"`/maplib.sh
 ###############################################################################
 # Now, proceeding to iterate. We make sure we pull out both of the resulting
 # *.fastq files from the single *.sra file by using some trickery (i.e. adding
-# _1.fastq and _2.fastq to the end of each). We check whether each one is Phred33
-# or Phred64 using the 'PhredChecker.py' program in the utilities.
+# 1.fastq and 2.fastq to the end of each). Alternatively, we can match up
+# Gzipped FASTQ files in each pair. We check whether each one is Phred33 or
+# Phred64 using the FASTQC output.
 
 for sra in ${files[@]}; do
 	lastcheck=$sra":endsort"
