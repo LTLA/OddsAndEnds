@@ -59,23 +59,23 @@ source `dirname "${BASH_SOURCE[0]}"`/maplib.sh
 # Gzipped FASTQ files in each pair. We check whether each one is Phred33 or
 # Phred64 using the FASTQC output.
 
-for sra in ${files[@]}; do
-	lastcheck=$sra":endsort"
+for curfile in ${files[@]}; do
+	lastcheck=$curfile":endsort"
 	if [ `check_done $lastcheck $log` -ne 1 ]; then
 		continue
 	fi
 
 	# Decompressing.
-	curjob=$sra":split"
+	curjob=$curfile":split"
 	if [ `check_done $curjob $log` -eq 1 ]; then
 		compressfind='\.(fastq|fq)\.gz$'
 		if [[ $curfile =~ \.sra$ ]]; then
-	   		fastq-dump -O $temp --split-files $sra 
+	   		fastq-dump -O $temp --split-files $curfile
 		elif [[ $curfile =~ ${compressfind} ]]; then
 			if [[ $curfile =~ 1${compressfind} ]]; then
 				matefile=`echo $curfile | sed -r "s/1(${compressfind})/2\1/"`
 				useme=1
-			elif [[ $curfile =~ 2${compressfind} ]]
+			elif [[ $curfile =~ 2${compressfind} ]]; then
 				matefile=`echo $curfile | sed -r "s/2(${compressfind})/1\1/"`
 				useme=0
 			fi
@@ -84,7 +84,7 @@ for sra in ${files[@]}; do
 				echo "Mate file for paired-end data not found"
 				exit 1
 			fi
-			if [[ useme	-eq 0 ]]; then
+			if [[ $useme -eq 0 ]]; then
 				continue
 			fi
 			zcat $curfile > $temp/`basename $curfile | sed "s/\.gz$//"`
@@ -116,8 +116,9 @@ for sra in ${files[@]}; do
 	prefix=`basename $prefix1`
 
 	# Making QC plots (removing the *.zip file that goes with it).
-	curjob=$sra":plot"
+	curjob=$curfile":plot"
 	if [ `check_done $curjob $log` -eq 1 ]; then
+		echo $fastq1 $fastq2
 		fastqc $fastq1 -o $pics
 		fastqc $fastq2 -o $pics
 		rm $pics/*.zip
@@ -125,7 +126,7 @@ for sra in ${files[@]}; do
 	fi
 
 	# Aligning files with the map-and-split approach.
-	curjob=$sra":align"
+	curjob=$curfile":align"
 	if [ `check_done $curjob $log` -eq 1 ]; then
 		# Checking for Phred'ness, given that it's not guaranteed to be constant across libraries.
         	curphred=`guess_phred $pics $fastq1`
@@ -144,7 +145,7 @@ for sra in ${files[@]}; do
 	fi
 
 	# Fixing mate information.
-	curjob=$sra":fix"
+	curjob=$curfile":fix"
 	fixbam=$temp/fixed_$prefix".bam"
 	if [ `check_done $curjob $log` -eq 1 ]; then
 		FixMateInformation I=$rawbam O=$fixbam TMP_DIR=$vtmp VALIDATION_STRINGENCY=SILENT SORT_ORDER=coordinate
@@ -152,7 +153,7 @@ for sra in ${files[@]}; do
 	fi
 
 	# Removing duplicate reads.
-	curjob=$sra":dedup"
+	curjob=$curfile":dedup"
 	if [ `check_done $curjob $log` -eq 1 ]; then
 		MarkDuplicates I=$fixbam O=$rawbam M=$temp/blah.txt TMP_DIR=$vtmp AS=true REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT
 		echo $curjob >> $log
