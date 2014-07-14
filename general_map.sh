@@ -55,18 +55,29 @@ for curfile in ${files[@]}; do
 	# in the same directory, otherwise it'd be harder to code.
 	curjob=$curfile":split"
 	if [ `check_done $curjob $log` -eq 1 ]; then
+		compressfind='\.(fastq|fq)(\.gz)?$'
 		if [[ $curfile =~ \.sra$ ]]; then
 			if [ $pet -eq 1 ]; then
 	   			fastq-dump -O $temp --split-files $curfile
 			else
 	   			fastq-dump -O $temp $curfile
-	 	fi
-		elif [[ $curfile =~ \.(fastq|fq)(\.gz)?$ ]]; then
+			fi
+		elif [[ $curfile =~ ${compressfind} ]]; then
 			if [ $pet -eq 1 ]; then
-				matefile=`echo $curfile | sed -r "s/1(\.(fastq|fq)(\.gz)?)$/2\1/"`
-				if [[ $matefile == $curfile ]] || [ ! -e $matefile ]; then
-					# If the mate doesn't exist, we bail.
- 					continue
+				if [[ $curfile =~ 1${compressfind} ]]; then
+					matefile=`echo $curfile | sed -r "s/1(${compressfind})/2\1/"`
+					useme=1
+				elif [[ $curfile =~ 2${compressfind} ]]; then
+					matefile=`echo $curfile | sed -r "s/2(${compressfind})/1\1/"`
+					useme=0
+				fi
+				# We check that they match up, but we only process when curfile=1.
+				if [ ! -e $matefile ]; then
+					echo "Mate file for paired-end data not found"
+					exit 1
+				fi
+				if [[ $useme -eq 0 ]]; then
+					continue
 				fi
 				ln $matefile $temp
 			fi
