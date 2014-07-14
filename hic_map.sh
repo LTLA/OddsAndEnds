@@ -107,8 +107,8 @@ for curfile in ${files[@]}; do
 		echo "Paired FastQ files not found"
 		exit 1
 	fi
-	prefix1=`echo $fastq1 | sed -r "s/1\.fastq$//"`
-	prefix2=`echo $fastq2 | sed -r "s/2\.fastq$//"`
+	prefix1=`echo $fastq1 | sed -r "s/_R?1\.fastq$//"`
+	prefix2=`echo $fastq2 | sed -r "s/_R?2\.fastq$//"`
 	if [[ $prefix1 != $prefix2 ]]; then
 		echo "Prefixes do not match up for the two FastQ files"
 		exit 1
