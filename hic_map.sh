@@ -126,6 +126,7 @@ for curfile in ${files[@]}; do
 	fi
 
 	# Aligning files with the map-and-split approach.
+	rawbam=$temp/$prefix".bam"
 	curjob=$curfile":align"
 	if [ `check_done $curjob $log` -eq 1 ]; then
 		# Checking for Phred'ness, given that it's not guaranteed to be constant across libraries.
@@ -133,13 +134,12 @@ for curfile in ${files[@]}; do
 		if [ $curphred -eq 0 ]; then
 			curphred=$phred
 		fi
-		python $alchemist -o $temp -G $genome $fastq1 $fastq2 --sig $ligsig -P $curphred --cmd "bowtie2 -p 8"
+		python $alchemist -o $rawbam -G $genome -1 $fastq1 -2 $fastq2 --sig $ligsig -P $curphred --cmd "bowtie2 -p 8"
 		echo $curjob >> $log
 	fi
 
 	# Checking that the raw BAm file is there, named by its prefix.
-	rawbam=$temp/$prefix".bam"
-	if [[ $rawbam == "" ]]; then
+	if [[ ! -e $rawbam ]]; then
 		echo "Raw BAM file not found, name may differ from expected value" 
 		exit 1
 	fi
