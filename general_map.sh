@@ -127,11 +127,11 @@ for curfile in ${files[@]}; do
 	# Making QC plots (removing the *.zip file that goes with it).
 	curjob=$curfile":plot"
 	if [ `check_done $curjob $log` -eq 1 ]; then
-		fastqc $fastq1 -o $pics
+		fastqc $fastq1 -o $pics --extract
 		if [ $pet -eq 1 ]; then
-			fastqc $fastq2 -o $pics
+			fastqc $fastq2 -o $pics --extract
 		fi	
-		rm $pics/*.zip			  
+		rm $pics/*.zip $pics/*.html
 		echo $curjob >> $log
 	fi
 
