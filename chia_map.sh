@@ -95,8 +95,9 @@ for sra in ${files[@]}; do
 		curjob=$sra":delinked"
 		tempfix=$temp/$prefix
 		if [ `check_done $curjob $log` -eq 1 ]; then
-			additional=${additional:=""}
-			${HOME}/petchia/scripts/splitLinkers/splitLinkers -a $linkA -b $linkB -1 $fastq1 -2 $fastq2 -o $tempfix $additional
+			tstart=${tstart:=NA}
+			rname=${rname:=out}
+			echo "require(dacpet); splitLinkers('$fastq1', '$fastq2', linkA='$linkA', linkB='$linkB', prefix='$tempfix', read.prefix='$rname', start=$tstart)" | R --no-save
 			echo $curjob >> $log
 		fi
 
