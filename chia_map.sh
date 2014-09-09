@@ -85,9 +85,9 @@ for sra in ${files[@]}; do
 		# Making QC plots (removing the *.zip file that goes with it).
 		curjob=$sra":plot"
 		if [ `check_done $curjob $log` -eq 1 ]; then
-			fastqc $fastq1 -o $pics
-			fastqc $fastq2 -o $pics
-			rm $pics/*.zip
+			fastqc $fastq1 -o $pics --extract
+			fastqc $fastq2 -o $pics --extract
+			rm $pics/*.zip $pics/*.html
 			echo $curjob >> $log
 		fi
 
