@@ -97,7 +97,7 @@ for sra in ${files[@]}; do
 		if [ `check_done $curjob $log` -eq 1 ]; then
 			tstart=${tstart:=NA}
 			rname=${rname:=out}
-			echo "require(dacpet); splitLinkers('$fastq1', '$fastq2', linkA='$linkA', linkB='$linkB', prefix='$tempfix', read.prefix='$rname', start=$tstart)" | R --no-save
+			echo "require(dacpet); splitLinkers('$fastq1', '$fastq2', linkerA='$linkA', linkerB='$linkB', prefix='$tempfix', read.prefix='$rname', start=$tstart)" | R --no-save
 			echo $curjob >> $log
 		fi
 
