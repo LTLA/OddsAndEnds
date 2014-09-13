@@ -58,6 +58,14 @@ source `dirname "${BASH_SOURCE[0]}"`/maplib.sh
 # 1.fastq and 2.fastq to the end of each). Alternatively, we can match up
 # Gzipped FASTQ files in each pair. We check whether each one is Phred33 or
 # Phred64 using the FASTQC output.
+#
+# As a side note, some non-duplicate pairs will have the same pair of positions
+# if both reads are chimeric and their 5' segments are on the reverse strand, 
+# i.e., the recorded positions are the restriction sites. These will not be
+# reported as duplicates by MarkDuplicates, as the positions actually used in
+# the function are those for the 5' ends of each read. Check out
+# < http://sourceforge.net/p/samtools/mailman/samtools-help/thread/4C5C47A0.9060106@eva.mpg.de/ >
+# for more details.
 
 for curfile in ${files[@]}; do
 	lastcheck=$curfile":endsort"
@@ -152,7 +160,7 @@ for curfile in ${files[@]}; do
 		echo $curjob >> $log
 	fi
 
-	# Removing duplicate reads.
+	# Removing duplicate reads. 
 	curjob=$curfile":dedup"
 	if [ `check_done $curjob $log` -eq 1 ]; then
 		MarkDuplicates I=$fixbam O=$rawbam M=$temp/blah.txt TMP_DIR=$vtmp AS=true REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT
