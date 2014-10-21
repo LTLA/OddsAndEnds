@@ -32,6 +32,9 @@ if (!exists('pet')){
 if (!exists("exonic")) {
 	exonic <- FALSE
 }
+if (!exists("technical")) { 
+	technical <- NULL
+}
 @
 
 \maketitle
@@ -43,7 +46,7 @@ the same package for alignment and read counting avoids problems with synchronis
 
 <<>>=
 require(Rsubread)
-print(allBam);
+print(allBam)
 print(genome)
 @
 
@@ -72,6 +75,7 @@ is set at 30 which assumes that 0.1\% of reads are incorrectly mapped due to amb
 minq <- 30
 @
 
+\section{Read counting into genes}
 The number of reads (or read pairs) mapped to each exon is counted for each gene in the current genome. 
 <<echo=FALSE,results=tex,strip.white=false>>=
 if (exonic) { 
@@ -80,7 +84,6 @@ if (exonic) {
 	cat("For gene-level results, exon-level counts are summed together for each gene obtain a single count for that gene.\n")
 }
 @
-A copy of the count table is saved for downstream use in the differential expression analysis.
 
 <<echo=FALSE,results=tex,strip.white=false>>=
 cmds <- c(sprintf('output <- featureCounts(allBam, annot.inbuilt=genome, isPairedEnd=pet, minMQS=minq, useMetaFeatures=%s)', as.character(!exonic)),
@@ -99,11 +102,9 @@ if (exonic) {
 		'}',
 		'rownames(output$counts) <- paste0(rownames(output$counts), ":", unlist(by.exon))')
 } 
-cmds <- c(cmds, 
-sprintf('write.table(output$counts, file="%sic_counts.tsv", sep="\\t", quote=FALSE, row.names=TRUE, col.names=NA)', ifelse(exonic, "exon", "gen")))
 
 cat("\\begin{Schunk}\n\\begin{Sinput}\n")
-cat(paste(ifelse(grepl("^\\s", cmds), "+", ">"), cmds), 'head(output$counts)', sep="\n")
+cat(paste(ifelse(grepl("^\\s", cmds), "+", ">"), cmds), '> head(output$counts)', sep="\n")
 cat("\\end{Sinput}\n\\end{Schunk}")
 @
 <<results=hide>>=
@@ -134,7 +135,7 @@ Obviously, fragment sizes may be inflated by the inclusion of the intron length 
    	cmds <- c("require(csaw)",
 	    	"sizes <- diags <- list()",
       	 	"for (bam in allBam) {",
-	   		"    current <- getPETSizes(bam, minq=minq)", 
+	   		"    current <- getPETSizes(bam, param=readParam(minq=minq))", 
 	   		"    sizes[[basename(bam)]] <- summary(current$sizes)",
 	   		"    diags[[basename(bam)]] <- current$diagnostics",
 	   		"}")
@@ -162,6 +163,44 @@ The truest way to obtain diagnostics would be to run \texttt{featureCounts} with
 		cat("\\end{Soutput}\n\\end{Schunk}\n")
 	}
 }
+@
+
+<<echo=FALSE,results=tex,strip.white=FALSE>>=
+if (!is.null(technical)) {
+	cat("\\section{Merging technical replicates}
+Any technical replicates are merged together by adding the counts for each gene.
+This is based on the assumption that sequencing is a Poisson process.
+Thus, addition of counts will obtain the equivalent count from a (hypothetical) single run at a depth equal to the sum of the individual runs.
+")
+	cat(c("\\begin{Schunk}\n\\begin{Sinput}",
+	 	"> technical",
+		"\\end{Sinput}",
+		"\\begin{Soutput}"), sep="\n")
+	print(technical)
+	cat("\\end{Soutput}\n\\end{Schunk}\n")
+
+	cmds <- c("by.tech <- split(1:ncol(output$counts), technical)",
+			  "new.mat <- matrix(0L, nrow(output$counts), length(by.tech))",
+			  "for (x in 1:length(by.tech)) { new.mat[,x] <- rowSums(output$counts[,by.tech[[x]]]) }",
+			  "colnames(new.mat) <- names(by.tech)",
+			  "output$counts <- new.mat")
+	cat(c("\\begin{Schunk}\n\\begin{Sinput}",
+		cat(paste(ifelse(grepl("^\\s", cmds), "+", ">"), cmds), "> head(output$counts)", sep="\n")
+		"\\end{Sinput}",
+		"\\begin{Soutput}"), sep="\n")
+	print(head(output$counts))
+	cat("\\end{Soutput}\n\\end{Schunk}\n")
+}
+@
+
+Finally, a copy of the count table is saved for downstream use in the differential expression analysis.
+
+<<>>=
+cmds <- sprintf('write.table(output$counts, file="%sic_counts.tsv", sep="\\t", quote=FALSE, row.names=TRUE, col.names=NA)', ifelse(exonic, "exon", "gen"))
+cat(c("\\begin{Schunk}\n\\begin{Sinput}",
+	paste(">", cmds), 
+	"\\end{Sinput}\n\\end{Schunk}"), sep="\n")
+eval(parse(text=cmds))
 @
 
 \section{Session Information}
