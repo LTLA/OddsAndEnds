@@ -182,13 +182,13 @@ Thus, addition of counts will obtain the equivalent count from a (hypothetical) 
 	cmds <- c("by.tech <- split(1:ncol(output$counts), technical)",
 			  "new.mat <- matrix(0L, nrow(output$counts), length(by.tech))",
 			  "for (x in 1:length(by.tech)) { new.mat[,x] <- rowSums(output$counts[,by.tech[[x]]]) }",
-			  "colnames(new.mat) <- names(by.tech)",
-			  "output$counts <- new.mat")
+			  "colnames(new.mat) <- names(by.tech)")
 	cat(c("\\begin{Schunk}\n\\begin{Sinput}",
-		cat(paste(ifelse(grepl("^\\s", cmds), "+", ">"), cmds), "> head(output$counts)", sep="\n")
+		paste(ifelse(grepl("^\\s", cmds), "+", ">"), cmds), "> head(new.mat)", 
 		"\\end{Sinput}",
 		"\\begin{Soutput}"), sep="\n")
-	print(head(output$counts))
+	eval(parse(text=cmds))
+	print(head(new.mat))
 	cat("\\end{Soutput}\n\\end{Schunk}\n")
 }
 @
@@ -196,7 +196,9 @@ Thus, addition of counts will obtain the equivalent count from a (hypothetical) 
 Finally, a copy of the count table is saved for downstream use in the differential expression analysis.
 
 <<>>=
-cmds <- sprintf('write.table(output$counts, file="%sic_counts.tsv", sep="\\t", quote=FALSE, row.names=TRUE, col.names=NA)', ifelse(exonic, "exon", "gen"))
+cmds <- sprintf('write.table(%s, file="%sic_counts.tsv", sep="\\t", quote=FALSE, row.names=TRUE, col.names=NA)', 
+	ifelse(is.null(technical), "output$counts", "new.mat"), 
+	ifelse(exonic, "exon", "gen"))
 cat(c("\\begin{Schunk}\n\\begin{Sinput}",
 	paste(">", cmds), 
 	"\\end{Sinput}\n\\end{Schunk}"), sep="\n")
