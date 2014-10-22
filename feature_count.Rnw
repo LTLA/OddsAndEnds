@@ -165,7 +165,7 @@ The truest way to obtain diagnostics would be to run \texttt{featureCounts} with
 }
 @
 
-<<echo=FALSE,results=tex,strip.white=FALSE>>=
+<<echo=FALSE,results=tex,strip.white=false>>=
 if (!is.null(technical)) {
 	cat("\\section{Merging technical replicates}
 Any technical replicates are merged together by adding the counts for each gene.
@@ -195,7 +195,7 @@ Thus, addition of counts will obtain the equivalent count from a (hypothetical) 
 
 Finally, a copy of the count table is saved for downstream use in the differential expression analysis.
 
-<<>>=
+<<results=tex,echo=FALSE,strip.white=false>>=
 cmds <- sprintf('write.table(%s, file="%sic_counts.tsv", sep="\\t", quote=FALSE, row.names=TRUE, col.names=NA)', 
 	ifelse(is.null(technical), "output$counts", "new.mat"), 
 	ifelse(exonic, "exon", "gen"))
