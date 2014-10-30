@@ -157,11 +157,11 @@ for curfile in ${files[@]}; do
 			curphred=$phred
 		fi
 		
-		subcmd=/export/share/elvis/bioinf/liao/Subread-1.4.4-p1/bin/subread-align
+		subcmd="subread-align -u -H"
 		if [ $pet -eq 1 ]; then
-			$subcmd -i $genome -r $fastq1 -R $fastq2 -o $curbam -P $curphred -m $conthresh --BAMoutput $iszipped -u -H
+			$subcmd -i $genome -r $fastq1 -R $fastq2 -o $curbam -P $curphred -m $conthresh --BAMoutput $iszipped
 		else
-			$subcmd -i $genome -r $fastq1 -o $curbam -P $phred -m $conthresh --BAMoutput $iszipped -u -H
+			$subcmd -i $genome -r $fastq1 -o $curbam -P $phred -m $conthresh --BAMoutput $iszipped
 		fi
 		echo $curjob >> $log
 	fi
