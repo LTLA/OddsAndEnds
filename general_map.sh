@@ -207,6 +207,22 @@ rmdir $temp
 rm -r $vtmp
 rm $log   
 
+# Adding a ticket to indicate successful completion of the run; and the version numbers involved.
+
+ticket=success.log
+if [[ -e $ticket ]]; then
+	rm $ticket
+fi
+fastqc -v >> $ticket
+stored=`subread-align -v 2>&1 | sed "s/.*v/v/" | sed "s/\n//g"`
+printf "$subcmd (" >> $ticket
+printf $stored >> $ticket
+printf ")\n" >> $ticket
+stored=`samtools 2>&1 | grep -i "Version:"`
+printf "Samtools $stored\n" >> $ticket
+stored=`MarkDuplicates --version 2>&1`
+printf "MarkDuplicates version $stored\n" >> $ticket
+
 ###############################################################################
 ###############################################################################
 ###############################################################################
