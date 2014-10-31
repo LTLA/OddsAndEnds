@@ -189,4 +189,17 @@ options(width=200)
 output
 @
 
+\section{Session Information}
+We store the session information for posterity.
+
+<<>>=
+sessionInfo()
+@
+
+As a side bonus, we also pull out and display the program settings and version numbers from the mapping procedure.
+
+<<>>=
+readLines("success.log")
+@
+
 \end{document}
