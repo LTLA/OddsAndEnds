@@ -157,11 +157,11 @@ for curfile in ${files[@]}; do
 			curphred=$phred
 		fi
 		
-		subcmd="subread-align -u -H -T 4"
+		subcmd="subread-align -u -H -T 4 -P $curphred -m $conthresh --BAMoutput $iszipped"
 		if [ $pet -eq 1 ]; then
-			$subcmd -i $genome -r $fastq1 -R $fastq2 -o $curbam -P $curphred -m $conthresh --BAMoutput $iszipped
+			$subcmd -i $genome -r $fastq1 -R $fastq2 -o $curbam
 		else
-			$subcmd -i $genome -r $fastq1 -o $curbam -P $phred -m $conthresh --BAMoutput $iszipped
+			$subcmd -i $genome -r $fastq1 -o $curbam 		
 		fi
 		echo $curjob >> $log
 	fi
