@@ -181,7 +181,7 @@ Thus, addition of counts will obtain the equivalent count from a (hypothetical) 
 
 	cmds <- c("by.tech <- split(1:ncol(output$counts), technical)",
 			  "new.mat <- matrix(0L, nrow(output$counts), length(by.tech))",
-			  "for (x in 1:length(by.tech)) { new.mat[,x] <- rowSums(output$counts[,by.tech[[x]]],drop=FALSE) }",
+			  "for (x in 1:length(by.tech)) { new.mat[,x] <- rowSums(output$counts[,by.tech[[x]],drop=FALSE]) }",
 			  "colnames(new.mat) <- names(by.tech)",
 			  "rownames(new.mat) <- rownames(output$counts)")
 	cat(c("\\begin{Schunk}\n\\begin{Sinput}",
