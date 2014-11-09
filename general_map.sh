@@ -142,7 +142,7 @@ for curfile in ${files[@]}; do
 	curbam=$temp/$prefix".bam"
 	if [ `check_done $curjob $log` -eq 1 ]; then
 		conthresh=3
-		firstseq=`sed '2q;d' $fastq1`
+		firstseq=`less $fastq1 | sed '2q;d'`
 		if [ ${#firstseq} -lt 45 ]; then
 			conthresh=2
 		fi
