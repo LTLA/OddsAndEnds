@@ -213,6 +213,8 @@ ticket=success.log
 if [[ -e $ticket ]]; then
 	rm $ticket
 fi
+
+set +e
 fastqc -v >> $ticket
 stored=`subread-align -v 2>&1 | sed "s/.*v/v/" | sed "s/\n//g"`
 printf "$subcmd (" >> $ticket
