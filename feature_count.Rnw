@@ -135,7 +135,7 @@ Obviously, fragment sizes may be inflated by the inclusion of the intron length 
    	cmds <- c("require(csaw)",
 	    	"sizes <- diags <- list()",
       	 	"for (bam in allBam) {",
-	   		"    current <- getPETSizes(bam, param=readParam(minq=minq))", 
+	   		"    current <- getPETSizes(bam, param=readParam(pet='both', minq=minq))", 
 	   		"    sizes[[basename(bam)]] <- summary(current$sizes)",
 	   		"    diags[[basename(bam)]] <- current$diagnostics",
 	   		"}")
