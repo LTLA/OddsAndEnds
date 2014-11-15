@@ -66,13 +66,12 @@ print(pet)
 @
 
 We also specify the minimum mapping quality which is allowable for a read (pair) to be counted.
-Low MAPQ scores are indicative of reads which are poorly mapped or not uniquely mapped. Their
-removal improves the reliability of the alignment and of the results themselves. This threshold
-is set at 30 which assumes that 0.1\% of reads are incorrectly mapped due to ambiguity 
-(or other reasons). Complete depletion of non-unique reads may be too conservative.
+Low MAPQ scores are indicative of reads which are poorly mapped or not uniquely mapped. 
+Their removal improves the reliability of the alignments, and subsequently increases the reliability of the final results.
+This threshold is set at 20 which assumes that 1\% of reads are incorrectly mapped due to ambiguity or other reasons. 
 
 <<>>=
-minq <- 30
+minq <- 20
 @
 
 \section{Read counting into genes}
