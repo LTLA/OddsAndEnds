@@ -188,6 +188,24 @@ rmdir $temp
 rmdir $vtmp
 rm $log   
 
+# Adding a ticket to indicate successful completion of the run; and the version numbers involved.
+
+ticket=success.log
+if [[ -e $ticket ]]; then
+	rm $ticket
+fi
+
+set +e
+fastqc -v >> $ticket
+stored=`cutadapt --version`
+printf "Cutadapt version $stored\n" >> $ticket
+stored=`bowtie2 --version | head -1 | sed "s/.*version //g"`
+printf "Bowtie2 version $stored\n" >> $ticket
+stored=`samtools 2>&1 | grep -i "Version:"`
+printf "Samtools $stored\n" >> $ticket
+stored=`MarkDuplicates --version 2>&1`
+printf "MarkDuplicates version $stored\n" >> $ticket
+
 ###############################################################################
 ###############################################################################
 ###############################################################################
