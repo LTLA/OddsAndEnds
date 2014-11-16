@@ -38,11 +38,11 @@ fi
 counterfoil=my_hicMapper.py
 alchemist=$temp/$counterfoil
 if [ ! -e $alchemist ]; then
-	cp  `dirname "${BASH_SOURCE[0]}"`/presplit_map.py $alchemist   
-fi
-if [ ! -e $alchemist ]; then
-	echo "Extraction of Hi-C mapping script failed."
-	exit 1
+	echo "require(diffHic); file.copy(system.file('python', 'presplit_map.py', package='diffHic'), '$alchemist');" | R --no-save
+	if [ ! -e $alchemist ]; then
+		echo "Extraction of Hi-C mapping script failed."
+		exit 1
+	fi
 fi
 
 # We load some common functions that we need from a BASH mapping library.
@@ -197,6 +197,7 @@ fi
 
 set +e
 fastqc -v >> $ticket
+echo "write(paste('diffHic', packageVersion('diffHic'), 'in', version\$version.string), '$ticket', append=TRUE)" | R --no-save
 stored=`cutadapt --version`
 printf "Cutadapt version $stored\n" >> $ticket
 stored=`bowtie2 --version | head -1 | sed "s/.*version //g"`
