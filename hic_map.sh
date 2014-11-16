@@ -204,6 +204,8 @@ stored=`bowtie2 --version | head -1 | sed "s/.*version //g"`
 printf "Bowtie2 version $stored\n" >> $ticket
 stored=`samtools 2>&1 | grep -i "Version:"`
 printf "Samtools $stored\n" >> $ticket
+stored=`FixMateInformation --version 2>&1`
+printf "FixMateInformation version $stored\n" >> $ticket
 stored=`MarkDuplicates --version 2>&1`
 printf "MarkDuplicates version $stored\n" >> $ticket
 
