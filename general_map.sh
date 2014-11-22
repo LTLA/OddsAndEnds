@@ -135,6 +135,35 @@ for curfile in ${files[@]}; do
 		echo $curjob >> $log
 	fi
 
+	# Trimming files, if requested.
+	curjob=$curfile":trim"
+	tagdust=/home/users/allstaff/alun/utilities/tagdust-2.2/src/tagdust
+	if [ ! -z $trimstring ] && [ `check_done $curjob $log` -eq 1 ]; then
+		trimtemp=$temp/tagdust_${prefix}
+		if [ $pet -eq 0 ]; then
+			$tagdust $trimstring $fastq1 -o $trimtemp
+			if [ ! -z $iszipped ]; then
+				gzip ${trimtemp}.fq
+				mv ${trimtemp}.fq.gz $fastq1
+			else 
+				mv ${trimtemp}.fq $fastq1
+			fi
+ 		else 
+			$tagdust $trimstring $fastq1 $fastq2 -o $trimtemp
+			if [ ! -z $iszipped ]; then
+				gzip ${trimtemp}_READ1.fq
+				gzip ${trimtemp}_READ2.fq
+				mv ${trimtemp}_READ1.fq.gz $fastq1
+				mv ${trimtemp}_READ2.fq.gz $fastq2
+			else 
+				mv ${trimtemp}_READ1.fq $fastq1
+				mv ${trimtemp}_READ2.fq $fastq2
+			fi
+		fi
+		mv ${trimtemp}_logfile.txt $pics
+		echo $curjob >> $log
+	fi
+
 	# Aligning files with subread-align. We provide some protection against
 	# very short reads, so that the consensus threshold isn't too high.  We peek at
 	# the file and check if it's too small.
@@ -216,6 +245,9 @@ fi
 
 set +e
 fastqc -v >> $ticket
+if [ ! -z $trimstring ]; then
+	$tagdust -v >> $ticket
+fi
 stored=`subread-align -v 2>&1 | sed "s/.*v/v/" | sed "s/\n//g"`
 printf "$subcmd (" >> $ticket
 printf $stored >> $ticket
