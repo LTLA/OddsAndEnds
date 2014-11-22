@@ -35,6 +35,9 @@ if (!exists("exonic")) {
 if (!exists("technical")) { 
 	technical <- NULL
 }
+if (!exists("stranded")) { 
+	stranded <- 0
+}
 @
 
 \maketitle
@@ -62,7 +65,7 @@ cat("\n")
 @
 
 <<>>=
-print(pet)
+pet
 @
 
 We also specify the minimum mapping quality which is allowable for a read (pair) to be counted.
@@ -72,6 +75,14 @@ This threshold is set at 10 which assumes that 10\% of reads are incorrectly map
 
 <<>>=
 minq <- 10
+@
+
+Finally, we need to determine whether we are dealing with strand-specific data.
+In such cases, only reads that map to the same strand of the gene should be counted for that gene.
+This is useful for correctly assigning reads to overlapping genes, e.g., like those involving non-coding RNAs.
+
+<<>>=
+stranded
 @
 
 \section{Read counting into genes}
@@ -85,7 +96,8 @@ if (exonic) {
 @
 
 <<echo=FALSE,results=tex,strip.white=false>>=
-cmds <- c(sprintf('output <- featureCounts(allBam, annot.inbuilt=genome, isPairedEnd=pet, minMQS=minq, useMetaFeatures=%s)', as.character(!exonic)),
+cmds <- c('output <- featureCounts(allBam, annot.inbuilt=genome, isPairedEnd=pet,',
+		  sprintf('	   minMQS=minq, useMetaFeatures=%s, strandSpecific=stranded)', as.character(!exonic)),
 'colnames(output$counts) <- sub("\\\\.bam$", "", basename(allBam))')
 if (exonic) {
 # Pulling out exon IDs.
