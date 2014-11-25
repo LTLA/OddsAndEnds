@@ -141,6 +141,31 @@ format <- paste0("\\begin{minipage}{0.49\\textwidth}
 cat(paste(format, c("\n", "\n\n"), sep=""))
 @
 
+<<results=tex,echo=FALSE,strip.white=false>>=
+trimmed <- useful == "trimstring"
+if (any(trimmed)) { 
+	cat(sprintf("\\section{Read trimming statistics}
+Reads were trimmed using the \\texttt{TagDust} program, using the HMM model \\texttt{%s}.
+This removes adapters, linkers, barcodes and fingerprints that might be floating around in the read sequence.
+Some description of trimming statistics is provided below.
+Note that reads failing the trimming procedure were not retained for alignment.
+", sub("[^=]+=", "", param[trimmed])))
+	stats <- list()
+	for (log in list.files("pics", pattern="^tagdust", full=TRUE)){ 
+		current <- readLines(log)
+		threshold <- as.numeric(sub(".*Selected Threshold:: ", "", current[grep("Selected Threshold", current)]))
+		totals <- as.integer(sub(".*\t([0-9]+)\t.*", "\\1", current[grep("total input reads", current)]))
+		kept <- as.integer(sub(".*\t([0-9]+)\t.*", "\\1", current[grep("successfully extracted", current)]))
+		stats[[basename(log)]] <- data.frame(Threshold=threshold, Total=totals, Kept=kept, Prop=kept/totals)
+	}
+	cat("\\begin{Schunk}
+\\begin{Soutput}")
+	do.call(rbind, stats)
+	cat("\\end{Soutput}
+\\end{Schunk}")
+}
+@
+
 \section{Alignment and dedupping statistics}
 We collect mapping statistics for each file in the BAM directory. In particular, we 
 look at the total number of reads and the number of mapped reads. For
