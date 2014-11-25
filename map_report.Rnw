@@ -160,7 +160,7 @@ Note that reads failing the trimming procedure were not retained for alignment.
 	}
 	cat("\\begin{Schunk}
 \\begin{Soutput}")
-	do.call(rbind, stats)
+	print(do.call(rbind, stats))
 	cat("\\end{Soutput}
 \\end{Schunk}")
 }
