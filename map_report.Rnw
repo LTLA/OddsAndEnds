@@ -101,7 +101,7 @@ the counts (and some low-quality sequence is better than no sequence at all).
 
 <<results=tex,keep.source=TRUE,echo=FALSE>>=
 all.q <- NULL
-pic.files <- list.files("pics")
+pic.files <- list.files("pics", pattern="fastqc$")
 for (fname in pic.files) {
    	all.q <- append(all.q, file.path("pics", fname, "Images", "per_base_quality.png"))	
 }
