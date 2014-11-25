@@ -159,7 +159,7 @@ Note that reads failing the trimming procedure were not retained for alignment.
 		stats[[basename(log)]] <- data.frame(Threshold=threshold, Total=totals, Kept=kept, Prop=kept/totals)
 	}
 	cat("\\begin{Schunk}
-\\begin{Soutput}")
+\\begin{Soutput}\n")
 	print(do.call(rbind, stats))
 	cat("\\end{Soutput}
 \\end{Schunk}")
