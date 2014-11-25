@@ -138,6 +138,7 @@ for curfile in ${files[@]}; do
 	# Trimming files, if requested.
 	curjob=$curfile":trim"
 	tagdust=/home/users/allstaff/alun/utilities/tagdust-2.2/src/tagdust
+	trimstring=${trimstring:=""}
 	if [ ! -z $trimstring ] && [ `check_done $curjob $log` -eq 1 ]; then
 		trimtemp=$temp/tagdust_${prefix}
 		if [ $pet -eq 0 ]; then
