@@ -103,6 +103,7 @@ if (exonic) {
 # Pulling out exon IDs.
 	cmds <- c(cmds, 
 		'by.gene <- rle(output$annotation$GeneID)',
+		'stopifnot(all(!duplicated(by.gene$value)))', #Some checks for co-location of exons by gene ID.
 		'gene.ends <- cumsum(by.gene$lengths)',
 		'by.exon <- list()',
 		'for (g in 1:length(gene.ends)) {',
