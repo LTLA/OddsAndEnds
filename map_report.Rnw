@@ -29,7 +29,7 @@ when it (inevitably) fails on the larger datasets. We can examine the current
 dataset and mapping parameters by loading up the configuration file.
 
 <<>>=
-param <- read.table("run_me.sh", fill=TRUE, 
+param <- read.table("run_me.sh", fill=TRUE, quote="", 
   sep="\t", stringsAsFactors=FALSE)[,1]
 keep <- grep("=", param)
 param <- param[keep]
