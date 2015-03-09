@@ -2,7 +2,7 @@
 
 if [[ $# -ne 1 ]]
 then
-	echo $0 "<repository>"
+	echo `basename $0` "<repository>"
 	exit 
 fi
 

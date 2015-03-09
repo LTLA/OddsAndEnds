@@ -2,7 +2,7 @@
 
 if [[ $# -ne 2 ]]
 then
-	echo $0 "<source> <destination>"
+	echo `basename $0` "<source> <destination>"
 	exit 
 fi
 

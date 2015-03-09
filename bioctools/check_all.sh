@@ -19,7 +19,7 @@ shift "$((OPTIND-1))"
 
 if [[ $# -ne 1 ]]
 then
-	echo $0 "[-v] [-r RCMD] <repository>"
+	echo `basename $0` "[-v] [-r RCMD] <repository>"
 	exit
 fi
 repo=$1
