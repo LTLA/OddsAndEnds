@@ -63,7 +63,7 @@ if [[ -n `find -maxdepth 1 | grep "${packname}.*.tar.gz"` ]]
 then 
 	rm ${packname}_*.tar.gz
 fi
-$RCMD CMD build $curdir/$repo >> $logfile
+$RCMD CMD build $curdir/$repo >> $logfile 2>&1
 echo >> $logfile
 
 # Running CHECK.
@@ -80,7 +80,7 @@ echo "Elapsed time for CHECK: $ELAPSED seconds" >> $logfile
 echo >> $logfile
 
 # Running custom tests.
-$RCMD CMD INSTALL $tarball >> $logfile
+$RCMD CMD INSTALL $tarball >> $logfile 2>&1 
 cd ${packname}.Rcheck/${packname}/tests
 if [[ $useVG -eq 1 ]]
 then
