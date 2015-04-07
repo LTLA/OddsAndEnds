@@ -1,8 +1,19 @@
 # This will apply changes in repository 1 over to repository 2.
 
+extra=""
+OPTIND=1
+while getopts ":d" opt; do
+case "$opt" in
+	d) 
+		extra="${extra} --dry-run"
+	;;
+esac
+done
+shift "$((OPTIND-1))"
+
 if [[ $# -ne 2 ]]
 then
-	echo `basename $0` "<source> <destination>"
+	echo `basename $0` "[-d] <source> <destination>"
 	exit 
 fi
 
@@ -32,4 +43,4 @@ do
 	fi
 done
 
-rsync -azv --delete --exclude=.svn $1 $2
+rsync -azv --delete --exclude=.svn $1 $2 $extra
