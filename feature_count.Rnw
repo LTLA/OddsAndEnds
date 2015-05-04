@@ -119,7 +119,7 @@ cat("\\begin{Schunk}\n\\begin{Sinput}\n")
 cat(paste(ifelse(grepl("^\\s", cmds), "+", ">"), cmds), '> head(output$counts)', sep="\n")
 cat("\\end{Sinput}\n\\end{Schunk}")
 @
-<<results=hide>>=
+<<results=hide,echo=FALSE>>=
 eval(parse(text=cmds))
 @
 <<echo=FALSE>>=
@@ -140,14 +140,14 @@ output$stat[1,-1]/colSums(output$stat[,-1])
 <<echo=FALSE,results=tex,strip.white=false>>=
 if (pet) {
 	cat("
-For PET data, we perform additional quality control using the \\texttt{getPETSizes} function in the \\textsf{csaw} package.
+For PET data, we perform additional quality control using the \\texttt{getPESizes} function in the \\textsf{csaw} package.
 This will examine the distribution of fragment sizes as well as other aspects of counting, e.g., inter-chromosomal read pairs, unmapped read pairs.
 Obviously, fragment sizes may be inflated by the inclusion of the intron length for read pairs spanning exon boundaries.
 \n")
    	cmds <- c("require(csaw)",
 	    	"sizes <- diags <- list()",
       	 	"for (bam in allBam) {",
-	   		"    current <- getPETSizes(bam, param=readParam(pet='both', minq=minq))", 
+	   		"    current <- getPESizes(bam, param=readParam(pet='both', minq=minq))", 
 	   		"    sizes[[basename(bam)]] <- summary(current$sizes)",
 	   		"    diags[[basename(bam)]] <- current$diagnostics",
 	   		"}")
