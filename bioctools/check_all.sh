@@ -6,8 +6,8 @@ RCMD=R
 
 OPTIND=1
 while getopts ":vr:" opt; do
-    case "$opt" in
-		v) 
+	case "$opt" in
+		v)
 			useVG=1
 			;;
 		r)
@@ -28,7 +28,7 @@ repo=$1
 # Making a new directory in which to store results.
 
 set -e
-set -u 
+set -u
 packname=`cat $repo/DESCRIPTION | grep "Package" | sed "s/Package: //"`
 vnum=`cat $repo/DESCRIPTION | grep "Version" | sed "s/Version: //"`
 tarball=${packname}_${vnum}.tar.gz
@@ -45,7 +45,7 @@ then
 	checkdir=${checkdir%/}-valgrind
 fi
 if [[ !  -e $checkdir ]]
-then 
+then
 	mkdir $checkdir
 fi
 
@@ -59,8 +59,8 @@ if [[ -e $logfile ]]
 then
 	rm $logfile
 fi
-if [[ -n `find -maxdepth 1 | grep "${packname}.*.tar.gz"` ]] 
-then 
+if [[ -n `find -maxdepth 1 | grep "${packname}.*.tar.gz"` ]]
+then
 	rm ${packname}_*.tar.gz
 fi
 $RCMD CMD build $curdir/$repo >> $logfile 2>&1
@@ -69,9 +69,9 @@ echo >> $logfile
 # Running CHECK.
 START=`date +%s%N`
 if [[ $useVG -eq 1 ]]
-then 
+then
 	$RCMD CMD check --use-valgrind $tarball >> $logfile 2>&1
-else 
+else
 	$RCMD CMD check $tarball >> $logfile 2>&1
 fi
 END=`date +%s%N`
@@ -84,16 +84,18 @@ locale=`echo 'cat(paste0(R.home(), "\n"))' | $RCMD --no-save --vanilla --silent 
 confile=$locale/etc/Makeconf
 newconf=${confile}.temp
 if [ -w $confile ]
-then 
+then
 	if [ ! -e $newconf ]
 	then
-    	cp $confile $newconf
-		cat $newconf | sed "s/^CXXFLAGS.*/CXXFLAGS = -g -O0 \$(LTO) -Wall -Wextra -pedantic/" > $confile
+		# If we got interrupted last time before we could do the final move, we don't want to overwrite
+		# the '.temp' file with our new settings. So, we don't copy if '.temp' already exists.
+		cp $confile $newconf
 	fi
-	$RCMD CMD INSTALL $tarball >> $logfile 2>&1 
+	cat $newconf | sed "s/^CXXFLAGS.*/CXXFLAGS = -g -O0 \$(LTO) -Wall -Wextra -pedantic/" > $confile
+	$RCMD CMD INSTALL $tarball >> $logfile 2>&1
 	mv $newconf $confile
-else 
-	$RCMD CMD INSTALL $tarball >> $logfile 2>&1 
+else
+	$RCMD CMD INSTALL $tarball >> $logfile 2>&1
 fi
 
 # Running custom tests.
