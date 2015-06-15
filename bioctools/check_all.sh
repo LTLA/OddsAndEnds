@@ -79,8 +79,24 @@ ELAPSED=`echo "scale=8; ($END - $START) / 1000000000" | bc`
 echo "Elapsed time for CHECK: $ELAPSED seconds" >> $logfile
 echo >> $logfile
 
+# Installing with warnings attached, if possible.
+locale=`echo 'cat(paste0(R.home(), "\n"))' | $RCMD --no-save --vanilla --silent | grep -v ">"`
+confile=$locale/etc/Makeconf
+newconf=${confile}.temp
+if [ -w $confile ]
+then 
+	if [ ! -e $newconf ]
+	then
+    	cp $confile $newconf
+		cat $newconf | sed "s/^CXXFLAGS.*/CXXFLAGS = -g -O0 \$(LTO) -Wall -Wextra -pedantic/" > $confile
+	fi
+	$RCMD CMD INSTALL $tarball >> $logfile 2>&1 
+	mv $newconf $confile
+else 
+	$RCMD CMD INSTALL $tarball >> $logfile 2>&1 
+fi
+
 # Running custom tests.
-$RCMD CMD INSTALL $tarball >> $logfile 2>&1 
 cd ${packname}.Rcheck/${packname}/tests
 if [[ $useVG -eq 1 ]]
 then
