@@ -95,6 +95,7 @@ then
 	$RCMD CMD INSTALL $tarball >> $logfile 2>&1
 	mv $newconf $confile
 else
+	printf "WARNING: failed to modify GCC compilation flags, building as usual instead...\n\n" >> $logfile
 	$RCMD CMD INSTALL $tarball >> $logfile 2>&1
 fi
 
