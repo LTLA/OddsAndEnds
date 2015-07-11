@@ -184,13 +184,13 @@ mapped <- NULL
 postdedup <- NULL
 for (outbam in allBam) {
     total<-append(total, countBam(outbam, 
-		param=ScanBamParam(flag=scanBamFlag(isNotPrimaryRead=FALSE)))$records)
+		param=ScanBamParam(flag=scanBamFlag(isSecondaryAlignment=FALSE)))$records)
     mapped<-append(mapped, countBam(outbam, 
 		param=ScanBamParam(flag=scanBamFlag(isUnmapped=FALSE, 
-			isNotPrimaryRead=FALSE)))$records)
+			isSecondaryAlignment=FALSE)))$records)
     postdedup<-append(postdedup, countBam(outbam, 
 		param=ScanBamParam(flag=scanBamFlag(isUnmapped=FALSE,
-			isDuplicate=FALSE,isNotPrimaryRead=FALSE)))$records)
+			isDuplicate=FALSE,isSecondaryAlignment=FALSE)))$records)
 }
 @
 
