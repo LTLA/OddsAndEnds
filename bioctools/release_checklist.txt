@@ -1,0 +1,47 @@
+# This is a development checklist for new release versions.
+
+package=csaw
+bversion=3_2
+
+# (0) Check they've already incremented the devel version numbers.
+
+updateRepos
+cat devel/DESCRIPTION | grep "Version"
+
+# (1) Get the latest version of the release.
+
+rm -rf release/
+svn co https://hedgehog.fhcrc.org/bioconductor/branches/RELEASE_${bversion}/madman/Rpacks/${package} release/
+cat release/DESCRIPTION | grep "Version"
+
+# (2) Check for any surprises compared to devel.
+
+Bioc_sync devel/ release/
+cd release/
+svn diff
+svn revert release/DESCRIPTION
+cd -
+
+# (3) Change NEWS.Rd for latest release number.
+
+cd devel/
+nano inst/NEWS.Rd
+
+# (4) Commit changes to NEWS.Rd
+
+svn commit inst/NEWS.Rd -m "Updated NEWS version numbers."
+svn up
+curnum=$(svn info inst/NEWS.Rd | grep "Last Changed Rev" | sed "s/.*: //g")
+
+# (5) Merge changes with release.
+
+cd -
+cd release/
+svn merge -c ${curnum} https://hedgehog.fhcrc.org/bioconductor/trunk/madman/Rpacks/${package}
+svn commit -m "Updated NEWS version numbers."
+
+# (7) Synchronise with local, and commit.
+
+cd -
+Bioc_sync devel/ local/
+
