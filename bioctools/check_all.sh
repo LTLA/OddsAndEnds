@@ -72,7 +72,7 @@ if [[ $useVG -eq 1 ]]
 then
 	$RCMD CMD check --use-valgrind $tarball >> $logfile 2>&1
 else
-	$RCMD CMD check $tarball >> $logfile 2>&1
+	$RCMD CMD check --as-cran $tarball >> $logfile 2>&1
 fi
 END=`date +%s%N`
 ELAPSED=`echo "scale=8; ($END - $START) / 1000000000" | bc`
