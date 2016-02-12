@@ -1,6 +1,5 @@
 set -e
 set -u
-source /etc/profile.d/modules.sh
 
 runfailed=${runfailed:=0}
 extra=${extra:=""}
@@ -102,7 +101,10 @@ while [ $( bjobs -J $jname | wc -l ) -gt 0 ]; do sleep 10; done
 for x in $( ls logs | grep "\\.log$" )
 do
     prefix=$( echo $x | sed "s/\\.log$//" )
-    rm logs/${prefix}.err
-    rm logs/${prefix}.out
+    if [ -e logs/${prefix}.err ]
+    then
+        rm logs/${prefix}.err
+        rm logs/${prefix}.out
+    fi
 done
 
