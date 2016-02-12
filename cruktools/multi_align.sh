@@ -1,10 +1,6 @@
 set -e
 set -u
-
-if [[ ! -e logs ]]
-then 
-    mkdir logs
-fi
+source /etc/profile.d/modules.sh
 
 runfailed=${runfailed:=0}
 extra=${extra:=""}
@@ -71,7 +67,7 @@ do
         subsec=$(echo $subsec | sed -r "s/\\.cram$//")
         working=bam/tempcram_${subsec}.bam
         sorted=bam/sorted_${subsec}.bam
-        supercmd="samtools view -b ${x} -F 2304 > ${working}; samtools sort -n -o ${sorted} ${working}; mv ${sorted} ${working}"
+        supercmd="set -e; set -u; samtools view -b ${x} -F 2304 > ${working}; samtools sort -n -o ${sorted} ${working}; mv ${sorted} ${working}"
         aligncmd="${HOME}/Code/mapping/solo_align.sh -i ${genome} -p ${subsec} ${extra}"
         if [[ $ispet -eq 0 ]]
         then
