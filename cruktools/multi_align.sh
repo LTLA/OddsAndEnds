@@ -68,7 +68,7 @@ do
     elif [[ $subsec =~ "cram" ]]
     then 
         subsec=$(echo $subsec | sed -r "s/\\.cram$//")
-        working=bam/temp_${subsec}.bam
+        working=bam/tempcram_${subsec}.bam
         sorted=bam/sorted_${subsec}.bam
         supercmd="samtools view -b ${x} -F 2304 > ${working}; samtools sort -n -o ${sorted} ${working}; mv ${sorted} ${working}"
         aligncmd="${HOME}/Code/mapping/solo_align.sh -i ${genome} -p ${subsec} ${extra}"
