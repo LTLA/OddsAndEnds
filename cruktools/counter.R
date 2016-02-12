@@ -1,7 +1,6 @@
 # Files of interest.
 bam.files
 anno.files
-stat.file
 
 if (!exists("ispet")) { 
     ispet <- FALSE
@@ -29,12 +28,10 @@ final <- data.frame(GeneID=rownames(out$counts), Length=out$annotation$Length, o
 write.table(file="genic_counts.tsv", final, col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t")
 
 # Augmenting the stats.
-if (!is.na(stat.file)) {
-    my.stats <- read.table(stat.file, header=TRUE)
-    m <- match(my.stats$Sample, colnames(out$counts))
-    my.stats$Genic <- as.integer(out$stat[1,-1][m])
-    write.table(file="my_qual.tsv", my.stats, col.names=TRUE, row.names=FALSE, quote=FALSE, sep="\t")
-}
+my.stats <- as.data.frame(t(out$stat[,-1]))
+colnames(my.stats) <- out$stat[,1]
+rownames(my.stats) <- colnames(out$counts)
+write.table(file="my_qual.tsv", my.stats, col.names=NA, quote=FALSE, sep="\t")
 
 # Saving the session information.
 unlink("temp.gtf")
