@@ -6,6 +6,7 @@ then
     mkdir logs
 fi
 
+runfailed=${runfailed:=0}
 extra=${extra:=""}
 if [ -z ${ispet+x} ]
 then
@@ -83,6 +84,12 @@ do
         fi
     fi
  
+    # Only running failed jobs, if requested.
+    if [ -e logs/${subsec}.log ] && [ $runfailed -eq 1 ]
+    then
+        continue
+    fi        
+
     # Deleting existing logs
     for f in $(ls logs | grep "^${subsec}")
     do
