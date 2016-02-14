@@ -86,7 +86,7 @@ do
     fi        
 
     # Deleting existing logs
-    for f in $(ls logs | grep "^${subsec}")
+    for f in $(ls logs | grep "^${subsec}\\.")
     do
         rm logs/$f
     done
