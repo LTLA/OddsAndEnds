@@ -8,9 +8,17 @@ if (!exists("ispet")) {
 if (!exists("strandspec")) {
     strandspec <- 0
 }
+if (!exists("minq")) { 
+    minq <- 10
+}
+if (!exists("additional")) {
+    additional <- list()
+}
 
 ispet
 strandspec
+minq
+additional
 
 if (length(anno.files)==1L) {
     file.symlink(anno.files, "temp.gtf")
@@ -19,8 +27,12 @@ if (length(anno.files)==1L) {
 }
 
 # Running featureCounts.
+
+additional$minMQS <- minq
+additional$isPairedEnd <- ispet
+additional$strandSpecific <- strandspec
 require(Rsubread)
-out <- featureCounts(bam.files, annot.ext="temp.gtf", isGTFAnnotationFile=TRUE, minMQS=10, nthreads=4, isPairedEnd=ispet, strandSpecific=strandspec)
+out <- do.call(featureCounts, c(list(files=bam.files, annot.ext="temp.gtf", isGTFAnnotationFile=TRUE, nthreads=4), additional))
 
 # Saving counts to file, with gene names.
 colnames(out$counts) <- sub("\\.bam$", "", basename(bam.files))
