@@ -10,7 +10,7 @@ set -u
 sortbyname=0
 mate="" 
 ispet=0
-extra=""
+extra="-u"
 fastq=""
 index=""
 aligntype=0
@@ -90,7 +90,7 @@ function run_fastqc {
 
 run_fastqc $fastq 1
 ofile="bam/${prefix}.bam"
-extra="${extra} -u -o ${ofile} -i ${index} -t ${aligntype}"
+extra="${extra} -o ${ofile} -i ${index} -t ${aligntype}"
 
 # Figuring out if it's compressed.
 if [ $( echo $fastq | grep "\\.gz$" | wc -l ) -eq 1 ]
