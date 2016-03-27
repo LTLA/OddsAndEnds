@@ -1,2 +1,12 @@
-rm logcount.*
-bsub -J "counter" -R "rusage[mem=16000]" -n 4 -e "logcount.err" -o "logcount.out" bash count_me.sh
+if [[ -e logcount.err || -e logcount.out ]]
+then
+    rm logcount.*
+fi
+
+torun=countme.sh
+if [[ $# -eq 1 ]]
+then
+    torun=$1
+fi
+
+bsub -J "counter" -R "rusage[mem=16000]" -n 4 -e "logcount.err" -o "logcount.out" bash $torun
