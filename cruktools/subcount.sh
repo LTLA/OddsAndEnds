@@ -3,7 +3,7 @@ then
     rm logcount.*
 fi
 
-torun=countme.sh
+torun=count_me.sh
 if [[ $# -eq 1 ]]
 then
     torun=$1
