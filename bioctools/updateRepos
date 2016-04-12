@@ -41,7 +41,13 @@ cd - > /dev/null
 echo >> $logfile
 
 echo "diffHic local:" >> $logfile
-cd ~/devel/diffHic/reference
+cd ~/devel/diffHic/local
+git pull >> $logfile 2>&1
+cd - > /dev/null
+echo >> $logfile
+
+echo "diffHic userguide:" >> $logfile
+cd ~/devel/diffHic/userguide
 git pull >> $logfile 2>&1
 cd - > /dev/null
 echo >> $logfile
