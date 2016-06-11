@@ -43,4 +43,4 @@ do
 	fi
 done
 
-rsync -azv --delete --exclude=.svn $1 $2 $extra
+rsync -azv --delete --exclude=.svn --exclude=.git $1 $2 $extra
