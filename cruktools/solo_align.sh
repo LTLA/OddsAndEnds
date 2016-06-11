@@ -124,6 +124,13 @@ then
     rm $indfile
 fi
 
+# Getting rid of old index files.
+idxfile=${ofile}.bai
+if [ -e $idxfile ]
+then
+    rm $idxfile
+fi
+
 # Sorting the files and removing duplicates.
 tempbam=bam/temp_${prefix}.bam
 SortSam I=$ofile O=$tempbam SORT_ORDER=coordinate
