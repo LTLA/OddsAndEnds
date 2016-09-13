@@ -24,6 +24,7 @@ smbclient //jmlab-data/jmlab -U lun01 << SMBCOMMANDS
 prompt
 cd $2
 mget $3
+exit
 SMBCOMMANDS
 
 elif [[ $1 == "to" ]]
@@ -33,6 +34,7 @@ smbclient //jmlab-data/jmlab -U lun01 << SMBCOMMANDS
 prompt
 cd $2
 mput $3
+exit
 SMBCOMMANDS
 
 fi
