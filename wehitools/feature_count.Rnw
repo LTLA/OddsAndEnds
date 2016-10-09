@@ -162,9 +162,9 @@ Obviously, fragment sizes may be inflated by the inclusion of the intron length 
 <<echo=FALSE,results=tex,strip.white=false>>=
 if (pet){ 
 	cat("
-Users should be aware that the PET diagnostics here won't necessarily correspond exactly to the reads that are uncounted in \texttt{featureCounts}.
-In fact, \texttt{featureCounts} is very permissive when it comes to counting read pairs that are rather silly (e.g., interchromosomals are allowed).
-The truest way to obtain diagnostics would be to run \texttt{featureCounts} with more stringent settings, but this tends to be quite laborious.
+Users should be aware that the PET diagnostics here won't necessarily correspond exactly to the reads that are uncounted in \\texttt{featureCounts}.
+In fact, \\texttt{featureCounts} is very permissive when it comes to counting read pairs that are rather silly (e.g., interchromosomals are allowed).
+The truest way to obtain diagnostics would be to run \\texttt{featureCounts} with more stringent settings, but this tends to be quite laborious.
 ")
 	for (x in c("sizes", "diags")) { 
 		cat(c(	"\\begin{Schunk}\n\\begin{Sinput}",
