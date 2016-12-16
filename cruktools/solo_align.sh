@@ -111,7 +111,7 @@ extra="${extra} -P ${phred}"
 # Handling it, if it's PE.
 if [ $ispet -eq 1 ]
 then
-    run_fastqc $fastq 2
+    run_fastqc $mate 2
     subread-align -r $fastq -R $mate $extra 
 else
     subread-align -r $fastq $extra
