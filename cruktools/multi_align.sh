@@ -45,7 +45,7 @@ do
     if [[ $subsec =~ "(fastq|fq)" ]]
     then
         subsec=$(echo $subsec | sed -r "s/\\.(fastq|fq)(\\.gz)?$//")
-        supercmd="${HOME}/Code/mapping/solo_align.sh -f $x -i $genome ${extra}"
+        supercmd="eval ${HOME}/Code/mapping/solo_align.sh -f $x -i $genome ${extra}" # Added eval in case 'extra' has quotes.
         if [[ $ispet -ne 0 ]]
         then
             if [[ $x =~ "1\\.(fastq|fq)" ]] 
@@ -67,7 +67,7 @@ do
         working=bam/tempcram_${subsec}.bam
         sorted=bam/sorted_${subsec}.bam
         supercmd="set -e; set -u; samtools view -b ${x} -F 2304 > ${working}; samtools sort -n -o ${sorted} ${working}; mv ${sorted} ${working}"
-        aligncmd="${HOME}/Code/mapping/solo_align.sh -i ${genome} -p ${subsec} ${extra}"
+        aligncmd="eval ${HOME}/Code/mapping/solo_align.sh -i ${genome} -p ${subsec} ${extra}"
         if [[ $ispet -eq 0 ]]
         then
             ref=bam/temp_${subsec}.fastq
