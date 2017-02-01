@@ -64,18 +64,18 @@ do
     elif [[ $subsec =~ "cram" ]]
     then 
         subsec=$(echo $subsec | sed -r "s/\\.cram$//")
-        working=bam/tempcram_${subsec}.bam
-        sorted=bam/sorted_${subsec}.bam
-        supercmd="set -e; set -u; samtools view -b ${x} -F 2304 > ${working}; samtools sort -n -o ${sorted} ${working}; mv ${sorted} ${working}"
+        workingfix=bam/tempcram_${subsec}
+        working=${workingfix}.bam
+        supercmd="set -e; set -u; samtools collate ${x} ${workingfix}"
         aligncmd="eval ${HOME}/Code/mapping/solo_align.sh -i ${genome} -p ${subsec} ${extra}"
         if [[ $ispet -eq 0 ]]
         then
             ref=bam/temp_${subsec}.fastq
-            supercmd="${supercmd}; bedtools bamtofastq -i ${working} -fq ${ref}; ${aligncmd} -f ${ref}; rm ${ref} ${working}"
+            supercmd="${supercmd}; samtools fastq -F 2304 ${working} -s ${ref}; ${aligncmd} -f ${ref}; rm ${ref} ${working}"
         else 
             first=bam/temp_${subsec}_1.fastq
             mate=bam/temp_${subsec}_2.fastq
-            supercmd="${supercmd}; bedtools bamtofastq -i ${working} -fq ${first} -fq2 ${mate}; ${aligncmd} -f ${first} -m ${mate}; rm ${first} ${mate} ${working}"
+            supercmd="${supercmd}; samtools fastq -F 2304 ${working} -1 ${first} -2 ${mate}; ${aligncmd} -f ${first} -m ${mate}; rm ${first} ${mate} ${working}"
         fi
     fi
  
