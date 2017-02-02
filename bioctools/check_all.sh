@@ -29,8 +29,8 @@ repo=$1
 
 set -e
 set -u
-packname=`cat $repo/DESCRIPTION | grep "Package" | sed "s/Package: //"`
-vnum=`cat $repo/DESCRIPTION | grep "Version" | sed "s/Version: //"`
+packname=`cat $repo/DESCRIPTION | grep "^Package:" | sed "s/Package: //" | head -1`
+vnum=`cat $repo/DESCRIPTION | grep "^Version:" | sed "s/Version: //"`
 tarball=${packname}_${vnum}.tar.gz
 curdir=`pwd`
 
