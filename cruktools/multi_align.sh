@@ -37,6 +37,7 @@ then
 fi
 
 jname=Align$RANDOM
+location=$( dirname $BASH_SOURCE )
 for x in ${fastq[@]}
 do
     subsec=$(basename $x)
@@ -45,7 +46,7 @@ do
     if [[ $subsec =~ "(fastq|fq)" ]]
     then
         subsec=$(echo $subsec | sed -r "s/\\.(fastq|fq)(\\.gz)?$//")
-        supercmd="eval ${HOME}/Code/mapping/solo_align.sh -f $x -i $genome ${extra}" # Added eval in case 'extra' has quotes.
+        supercmd="eval ${location}/solo_align.sh -f $x -i $genome ${extra}" # Added eval in case 'extra' has quotes.
         if [[ $ispet -ne 0 ]]
         then
             if [[ $x =~ "1\\.(fastq|fq)" ]] 
@@ -66,16 +67,15 @@ do
         subsec=$(echo $subsec | sed -r "s/\\.cram$//")
         workingfix=bam/tempcram_${subsec}
         working=${workingfix}.bam
-        supercmd="set -e; set -u; samtools collate ${x} ${workingfix}"
-        aligncmd="eval ${HOME}/Code/mapping/solo_align.sh -i ${genome} -p ${subsec} ${extra}"
+        aligncmd="eval ${location}/solo_align.sh -i ${genome} -p ${subsec} ${extra}"
         if [[ $ispet -eq 0 ]]
         then
             ref=bam/temp_${subsec}.fastq
-            supercmd="${supercmd}; samtools fastq -F 2304 ${working} -s ${ref}; ${aligncmd} -f ${ref}; rm ${ref} ${working}"
+            supercmd="set -e; set -u; bash ${location}/cram2fastq.sh $x ${ref}; ${aligncmd} -f ${ref}; rm ${ref}"
         else 
             first=bam/temp_${subsec}_1.fastq
             mate=bam/temp_${subsec}_2.fastq
-            supercmd="${supercmd}; samtools fastq -F 2304 ${working} -1 ${first} -2 ${mate}; ${aligncmd} -f ${first} -m ${mate}; rm ${first} ${mate} ${working}"
+            supercmd="set -e; set -u; bash ${location}/cram2fastq.sh $x ${first} ${mate}; ${aligncmd} -f ${first} -m ${mate}; rm ${first} ${mate}"
         fi
     fi
  
