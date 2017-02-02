@@ -20,12 +20,12 @@ odir=$(dirname $2)
 workingfix=${odir}/tempcram_${prefix}
 working=${workingfix}.bam
 
-echo samtools collate $1 ${workingfix}
+samtools collate $1 ${workingfix}
 if [ $paired -eq 0 ]
 then
-    echo samtools fastq -F 2304 ${working} -s ${2}
+    samtools fastq -F 2304 ${working} -s ${2}
 else
-    echo samtools fastq -F 2304 ${working} -1 ${2} -2 ${3}
+    samtools fastq -F 2304 ${working} -1 ${2} -2 ${3}
 fi
 
 rm ${working}
