@@ -25,25 +25,29 @@ fi
 if [ ! -d fastq ]
 then
     mkdir fastq
+    lfs setstripe -s 64m -c -1 fastq/ # Adding stripe settings.
 fi
 
 location=$(dirname $BASH_SOURCE)
 for cf in $(ls cram | grep ".cram$")
 do 
     prefix=$(echo $cf | sed "s/\\.cram$//g")
-    if [ $1 == "PAIRED" ]
+    if [ $1 == "SINGLE" ]
     then
-        xfile=fastq/$prefix.fq
+        xfile=fastq/${prefix}.fq
         bash ${location}/cram2fastq.sh cram/$cf $xfile
-        gzip $xfile
-    elif [ $1 == "SINGLE" ]
+        gzip -f $xfile
+    elif [ $1 == "PAIRED" ]
     then
-        xfile1=fastq/$prefix_1.fq
-        xfile2=fastq/$prefix_2.fq
+        xfile1=fastq/${prefix}_1.fq
+        xfile2=fastq/${prefix}_2.fq
         bash ${location}/cram2fastq.sh cram/$cf $xfile1 $xfile2
-        gzip $xfile1
-        gzip $xfile2
+        gzip -f $xfile1
+        gzip -f $xfile2
     fi
 done
 
+cd fastq
+md5sum *.fq.gz > md5.all
+cd -
 exit 0
