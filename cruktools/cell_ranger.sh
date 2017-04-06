@@ -1,15 +1,16 @@
 set -e
 set -u
 
-if [ $# -ge 2 ]
+if [ $# -le 2 ]
 then
-    echo "run_me.sh <barcode> <annotation> [OPTIONS]"
+    echo "$0 <barcode> <annotation> [OPTIONS]"
     exit 1
 fi
 bc=$1
-shift
 anno=$2
 shift
+shift
+otheropts="$@"
 
 # Setting up the working directory.
 workdir=working_${bc}
@@ -49,7 +50,7 @@ fi
     --transcriptome="${anno}" \
     --fastqs="${workdir}" \
     --sample="${bc}" \
-    $@
+    ${otheropts}
 
 # Pulling out the analysis files.
 cp -L ${bc}/outs/filtered_gene_bc_matrices/mm10/* ${newdir}
