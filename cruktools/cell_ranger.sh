@@ -53,7 +53,7 @@ fi
     ${otheropts}
 
 # Pulling out the analysis files.
-cp -L ${bc}/outs/filtered_gene_bc_matrices/mm10/* ${newdir}
+cp -L ${bc}/outs/filtered_gene_bc_matrices/*/* ${newdir}
 cp -L ${bc}/outs/web_summary.html ${newdir}
 cp -L ${bc}/outs/metrics_summary.csv ${newdir}
 
