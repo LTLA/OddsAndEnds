@@ -29,7 +29,7 @@ cd - > /dev/null
 echo >> $logfile
 
 echo "csaw workflow:" >> $logfile
-cd ~/devel/csaw/workflow
+cd ~/devel/csaw/workflow/local
 git pull >> $logfile 2>&1
 cd - > /dev/null
 echo >> $logfile
