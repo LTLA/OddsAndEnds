@@ -9,8 +9,9 @@ retain=0
 minqual=0
 strsplit=0
 header=""
+compress=0
 
-while getopts "F:f:q:sh:" opt; do
+while getopts "F:f:q:sh:z" opt; do
     case $opt in
         F) # Reads to discard
             discard=$OPTARG
@@ -27,6 +28,8 @@ while getopts "F:f:q:sh:" opt; do
         h) # bedgraph header details
             header=$OPTARG
             ;;
+        z) # compression
+            compress=1
     esac
 done
 
@@ -57,7 +60,6 @@ genfile=${prefix}_genome.txt
 samtools view -H $curfile | grep "@SQ" | cut -f2,3 | sed -r "s/[A-Z]+://g" > ${genfile}
 
 bedfile=${prefix}_temp.bed
-echo ${samtools_opts}
 samtools view $curfile ${samtools_opts} -b | bedtools bamtobed > ${bedfile}
 
 depth=$(wc -l ${bedfile} | cut -f1 -d " ")
@@ -70,6 +72,10 @@ then
     newname=${oprefix}.bedgraph
     echo "track type=bedGraph name=\"${oprefix}\" ${header}" > $newname
     bedtools genomecov -i ${bedfile} -bg -g ${genfile} -scale $(echo "scale=5;1000000.0/$depth" | bc) >> $newname
+    if [[ $compress -eq 1 ]]
+    then
+        gzip -f ${newname}
+    fi
 else
     for mode in P N 
     do
@@ -85,9 +91,14 @@ else
         newname_str=${oprefix_str}.bedgraph
         echo "track type=bedGraph name=\"${oprefix_str}\" ${header}" > $newname_str
         bedtools genomecov -i ${bedfile_str} -bg -g ${genfile} -scale $(echo "scale=5;1000000.0/$depth" | bc) >> $newname_str
-    done
 
-    rm ${bedfile_str}
+        if [[ $compress -eq 1 ]]
+        then
+            gzip -f ${newname_str}
+        fi
+    
+        rm ${bedfile_str}
+    done
 fi
 
 ####################################################
