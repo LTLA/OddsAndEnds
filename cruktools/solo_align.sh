@@ -15,8 +15,9 @@ fastq=""
 index=""
 aligntype=0
 prefix="out"
+handlearg=""
 
-while getopts "ngm:x:f:i:p:" opt; do
+while getopts "ngm:x:f:i:p:h:" opt; do
     case $opt in
     n) # Sort by name.
         sortbyname=1
@@ -40,12 +41,15 @@ while getopts "ngm:x:f:i:p:" opt; do
     p) # Prefix specifier
         prefix=$OPTARG
         ;;
+    h) # Number of file handles to keep open.
+        handlearg="MAX_FILE_HANDLES_FOR_READ_ENDS_MAP $OPTARG"
+        ;;
     esac
 done
 
 if [ "$fastq" == "" ] || [ "$index" == "" ]
 then
-    echo "$0 -f FASTQ -i INDEX [-m MATE -n -g -x EXTRA -p PREFIX]" >&2
+    echo "$0 -f FASTQ -i INDEX [-m MATE -n -g -x EXTRA -p PREFIX -h NHANDLES]" >&2
     exit 1
 fi
 
@@ -111,7 +115,7 @@ extra="${extra} -P ${phred}"
 # Handling it, if it's PE.
 if [ $ispet -eq 1 ]
 then
-    run_fastqc $fastq 2
+    run_fastqc $mate 2
     subread-align -r $fastq -R $mate $extra 
 else
     subread-align -r $fastq $extra
@@ -134,7 +138,7 @@ fi
 # Sorting the files and removing duplicates.
 tempbam=bam/temp_${prefix}.bam
 SortSam I=$ofile O=$tempbam SORT_ORDER=coordinate
-MarkDuplicates I=$tempbam O=$ofile M=${tempbam}.txt AS=true REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT
+MarkDuplicates I=$tempbam O=$ofile M=${tempbam}.txt AS=true REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT ${handlearg}
 rm $tempbam ${tempbam}.txt
 
 # Re-sorting the files by name, if requested.

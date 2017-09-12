@@ -29,8 +29,8 @@ repo=$1
 
 set -e
 set -u
-packname=`cat $repo/DESCRIPTION | grep "Package" | sed "s/Package: //"`
-vnum=`cat $repo/DESCRIPTION | grep "Version" | sed "s/Version: //"`
+packname=`cat $repo/DESCRIPTION | grep "^Package:" | sed "s/Package: //" | head -1`
+vnum=`cat $repo/DESCRIPTION | grep "^Version:" | sed "s/Version: //"`
 tarball=${packname}_${vnum}.tar.gz
 curdir=`pwd`
 
@@ -79,6 +79,10 @@ ELAPSED=`echo "scale=8; ($END - $START) / 1000000000" | bc`
 echo "Elapsed time for CHECK: $ELAPSED seconds" >> $logfile
 echo >> $logfile
 
+# Running BiocCheck.
+$RCMD CMD BiocCheck $tarball >> $logfile 2>&1
+echo >> $logfile
+
 # Running custom tests.
 $RCMD CMD INSTALL $tarball >> $logfile 2>&1
 cd ${packname}.Rcheck/${packname}/tests
@@ -91,7 +95,4 @@ fi
 echo >> $logfile
 cd ../../..
 
-# Running BiocCheck.
-$RCMD CMD BiocCheck $tarball >> $logfile 2>&1
-echo >> $logfile
 
