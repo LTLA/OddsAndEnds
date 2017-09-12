@@ -4,20 +4,8 @@ trap 'if [[ -e $logfile ]]; then rm $logfile; fi; exit 1;' INT
 
 # Updates all repositories.
 
-echo "csaw release:" >> $logfile
-cd ~/devel/csaw/release
-svn up  >> $logfile
-cd - > /dev/null
-echo >> $logfile
-
-echo "csaw devel:" >> $logfile
-cd ~/devel/csaw/devel
-svn up >> $logfile
-cd - > /dev/null
-echo >> $logfile
-
-echo "csaw local:" >> $logfile
-cd ~/devel/csaw/local
+echo "csaw:" >> $logfile
+cd ~/devel/csaw/package
 git pull >> $logfile 2>&1
 cd - > /dev/null
 echo >> $logfile
@@ -28,20 +16,8 @@ git pull >> $logfile 2>&1
 cd - > /dev/null
 echo >> $logfile
 
-echo "diffHic release:" >> $logfile
-cd ~/devel/diffHic/release
-svn up >> $logfile
-cd - > /dev/null
-echo >> $logfile
-
-echo "diffHic devel:" >> $logfile
-cd ~/devel/diffHic/devel
-svn up >> $logfile
-cd - > /dev/null
-echo >> $logfile
-
-echo "diffHic local:" >> $logfile
-cd ~/devel/diffHic/local
+echo "diffHic:" >> $logfile
+cd ~/devel/diffHic/package
 git pull >> $logfile 2>&1
 cd - > /dev/null
 echo >> $logfile
@@ -52,13 +28,7 @@ git pull >> $logfile 2>&1
 cd - > /dev/null
 echo >> $logfile
 
-echo "edgeR devel:" >> $logfile
-cd ~/devel/edgeR/devel
-svn up >> $logfile
-cd - > /dev/null
-echo >> $logfile
-
-echo "edgeR local:" >> $logfile
+echo "edgeR:" >> $logfile
 cd ~/devel/edgeR/reference 
 svn up >> $logfile
 cd - > /dev/null
