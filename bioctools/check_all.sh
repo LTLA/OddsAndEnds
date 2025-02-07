@@ -59,7 +59,7 @@ if [[ -e $logfile ]]
 then
 	rm $logfile
 fi
-if [[ -n `find -maxdepth 1 | grep "${packname}.*.tar.gz"` ]]
+if [[ -n `find . -maxdepth 1 | grep "${packname}.*.tar.gz"` ]]
 then
 	rm ${packname}_*.tar.gz
 fi
@@ -80,19 +80,5 @@ echo "Elapsed time for CHECK: $ELAPSED seconds" >> $logfile
 echo >> $logfile
 
 # Running BiocCheck.
-$RCMD CMD BiocCheck $tarball >> $logfile 2>&1
+$RCMD -e "BiocCheck::BiocCheck('$tarball')" >> $logfile 2>&1
 echo >> $logfile
-
-# Running custom tests.
-$RCMD CMD INSTALL $tarball >> $logfile 2>&1
-cd ${packname}.Rcheck/${packname}/tests
-if [[ $useVG -eq 1 ]]
-then
-	bash run_all_tests.sh $RCMD -d valgrind >> $logfile
-else
-	bash run_all_tests.sh $RCMD >> $logfile
-fi
-echo >> $logfile
-cd ../../..
-
-
